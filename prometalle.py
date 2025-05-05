@@ -18,49 +18,53 @@ def main():
     st.title("Prometalle – Symulacja inwestycji w metale szlachetne")
 
     if 'language' not in st.session_state:
-        st.session_state.language = DEFAULT_LANGUAGE
+        st.session_state.language = 'pl'
 
     with st.sidebar:
         st.header("Ustawienia symulacji")
         selected_language = st.selectbox(
             translate("choose_language", language=st.session_state.language),
             options=AVAILABLE_LANGUAGES,
+            index=AVAILABLE_LANGUAGES.index('pl'),
             format_func=lambda x: {"pl": "Polski", "en": "English", "de": "Deutsch"}.get(x, x)
         )
         st.session_state.language = selected_language
 
         selected_currency = st.selectbox(
             translate("choose_currency", language=st.session_state.language),
-            options=AVAILABLE_CURRENCIES
+            options=AVAILABLE_CURRENCIES,
+            index=AVAILABLE_CURRENCIES.index('EUR')
         )
         selected_unit = st.selectbox(
             translate("choose_unit", language=st.session_state.language),
             options=AVAILABLE_UNITS,
+            index=AVAILABLE_UNITS.index('g'),
             format_func=lambda x: {"g": "Gramy (g)", "oz": "Uncje (oz)"}.get(x, x)
         )
 
         start_amount = st.number_input(
             label="Kwota początkowa inwestycji (EUR)",
             min_value=100.0,
-            value=10000.0,
+            value=100000.0,
             step=100.0
         )
         recurring_amount = st.number_input(
             label="Kwota zakupu systematycznego (EUR)",
             min_value=0.0,
-            value=500.0,
+            value=250.0,
             step=50.0
         )
 
         frequency = st.selectbox(
             label="Częstotliwość zakupów",
-            options=["monthly", "quarterly", "weekly"]
+            options=["weekly", "monthly", "quarterly"],
+            index=0
         )
         purchase_day = st.number_input(
             label="Dzień zakupu (tydzień: 0-6, miesiąc: 1-31)",
             min_value=0,
             max_value=31,
-            value=15
+            value=0
         )
 
         years = st.slider(
