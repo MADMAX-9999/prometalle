@@ -11,6 +11,12 @@ from charts import plot_portfolio_value
 import pandas as pd
 import datetime
 
+LANGUAGE_LABELS = {
+    "pl": "Polski",
+    "en": "English",
+    "de": "Deutsch"
+}
+
 # Funkcja inicjująca ekran startowy i symulację
 def main():
     st.set_page_config(page_title="Prometalle", page_icon="✨", layout="wide")
@@ -22,12 +28,13 @@ def main():
 
     with st.sidebar:
         st.header(translate("simulation_settings", language=st.session_state.language))
-        selected_language = st.selectbox(
+
+        selected_language_label = st.selectbox(
             translate("choose_language", language=st.session_state.language),
-            options=AVAILABLE_LANGUAGES,
-            index=AVAILABLE_LANGUAGES.index('pl'),
-            format_func=lambda x: {"pl": "Polski", "en": "English", "de": "Deutsch"}.get(x, x)
+            options=[LANGUAGE_LABELS[code] for code in AVAILABLE_LANGUAGES],
+            index=AVAILABLE_LANGUAGES.index('pl')
         )
+        selected_language = [code for code, label in LANGUAGE_LABELS.items() if label == selected_language_label][0]
         st.session_state.language = selected_language
 
         selected_currency = st.selectbox(
