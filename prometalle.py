@@ -17,35 +17,62 @@ def main():
 
     st.title("Prometalle – Symulacja inwestycji w metale szlachetne")
 
+    if 'language' not in st.session_state:
+        st.session_state.language = DEFAULT_LANGUAGE
+
     with st.sidebar:
         st.header("Ustawienia symulacji")
         selected_language = st.selectbox(
-            translate("choose_language"),
+            translate("choose_language", language=st.session_state.language),
             options=AVAILABLE_LANGUAGES,
             format_func=lambda x: {"pl": "Polski", "en": "English", "de": "Deutsch"}.get(x, x)
         )
+        st.session_state.language = selected_language
+
         selected_currency = st.selectbox(
-            translate("choose_currency"),
+            translate("choose_currency", language=st.session_state.language),
             options=AVAILABLE_CURRENCIES
         )
         selected_unit = st.selectbox(
-            translate("choose_unit"),
+            translate("choose_unit", language=st.session_state.language),
             options=AVAILABLE_UNITS,
             format_func=lambda x: {"g": "Gramy (g)", "oz": "Uncje (oz)"}.get(x, x)
         )
 
-        start_amount = st.number_input("Kwota początkowa inwestycji (EUR)", min_value=100.0, value=10000.0, step=100.0)
-        recurring_amount = st.number_input("Kwota zakupu systematycznego (EUR)", min_value=0.0, value=500.0, step=50.0)
+        start_amount = st.number_input(
+            label="Kwota początkowa inwestycji (EUR)",
+            min_value=100.0,
+            value=10000.0,
+            step=100.0
+        )
+        recurring_amount = st.number_input(
+            label="Kwota zakupu systematycznego (EUR)",
+            min_value=0.0,
+            value=500.0,
+            step=50.0
+        )
 
-        frequency = st.selectbox("Częstotliwość zakupów", options=["monthly", "quarterly", "weekly"])
-        purchase_day = st.number_input("Dzień zakupu (tydzień: 0-6, miesiąc: 1-31)", min_value=0, max_value=31, value=15)
+        frequency = st.selectbox(
+            label="Częstotliwość zakupów",
+            options=["monthly", "quarterly", "weekly"]
+        )
+        purchase_day = st.number_input(
+            label="Dzień zakupu (tydzień: 0-6, miesiąc: 1-31)",
+            min_value=0,
+            max_value=31,
+            value=15
+        )
 
-        years = st.slider("Okres inwestycji (lata)", 1, 30, 10)
+        years = st.slider(
+            label="Okres inwestycji (lata)",
+            min_value=1,
+            max_value=30,
+            value=10
+        )
 
         run_simulation = st.button("Rozpocznij symulację")
 
     if run_simulation:
-        # Generowanie harmonogramu
         start_date = datetime.date.today()
         end_date = start_date + datetime.timedelta(days=years * 365)
 
@@ -70,29 +97,23 @@ def main():
         st.subheader("Harmonogram zakupów")
         st.dataframe(schedule)
 
-        # Załaduj ceny metali (tymczasowe dane przykładowe)
         metal_prices = load_metal_prices("metal_prices.csv")
 
-        # Alokacja metali (przykład)
         allocation = {"gold": 50, "silver": 30, "platinum": 10, "palladium": 10}
 
-        # Budowa portfela
         portfolio = build_portfolio(schedule, metal_prices, allocation)
         portfolio_with_storage = calculate_storage_costs(portfolio, storage_fee_rate=0.005)
 
         st.subheader("Zakupy i wartości metali")
         st.dataframe(portfolio_with_storage)
 
-        # Podsumowanie
         summary = aggregate_portfolio(portfolio_with_storage)
         st.subheader("Podsumowanie portfela")
         st.dataframe(summary)
 
-        # Łączne koszty magazynowania
         total_storage = total_storage_cost(portfolio_with_storage)
         st.success(f"Łączne koszty magazynowania: {total_storage:.2f} EUR")
 
-        # Wykres wartości portfela
         st.subheader("Wykres wartości portfela")
         plot_portfolio_value(portfolio_with_storage)
 
