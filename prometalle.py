@@ -60,12 +60,25 @@ def main():
             options=["weekly", "monthly", "quarterly"],
             index=0
         )
-        purchase_day = st.number_input(
-            label="Dzień zakupu (tydzień: 0-6, miesiąc: 1-31)",
-            min_value=0,
-            max_value=31,
-            value=0
-        )
+
+        if frequency == "weekly":
+            purchase_day = st.selectbox(
+                "Dzień tygodnia zakupu (0=Poniedziałek, ..., 4=Piątek)",
+                options=list(range(0, 5)),
+                index=0
+            )
+        elif frequency == "monthly":
+            purchase_day = st.selectbox(
+                "Dzień miesiąca zakupu (1-28)",
+                options=list(range(1, 29)),
+                index=0
+            )
+        elif frequency == "quarterly":
+            purchase_day = st.selectbox(
+                "Dzień kwartału zakupu (1-90)",
+                options=list(range(1, 91)),
+                index=0
+            )
 
         years = st.slider(
             label="Okres inwestycji (lata)",
