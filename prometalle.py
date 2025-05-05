@@ -21,7 +21,7 @@ def main():
         st.session_state.language = 'pl'
 
     with st.sidebar:
-        st.header("Ustawienia symulacji")
+        st.header(translate("simulation_settings", language=st.session_state.language))
         selected_language = st.selectbox(
             translate("choose_language", language=st.session_state.language),
             options=AVAILABLE_LANGUAGES,
@@ -43,51 +43,51 @@ def main():
         )
 
         start_amount = st.number_input(
-            label="Kwota początkowa inwestycji (EUR)",
+            label=translate("start_amount", language=st.session_state.language),
             min_value=100.0,
             value=100000.0,
             step=100.0
         )
         recurring_amount = st.number_input(
-            label="Kwota zakupu systematycznego (EUR)",
+            label=translate("recurring_amount", language=st.session_state.language),
             min_value=0.0,
             value=250.0,
             step=50.0
         )
 
         frequency = st.selectbox(
-            label="Częstotliwość zakupów",
+            label=translate("frequency", language=st.session_state.language),
             options=["weekly", "monthly", "quarterly"],
             index=0
         )
 
         if frequency == "weekly":
             purchase_day = st.selectbox(
-                "Dzień tygodnia zakupu (0=Poniedziałek, ..., 4=Piątek)",
+                translate("purchase_day_weekly", language=st.session_state.language),
                 options=list(range(0, 5)),
                 index=0
             )
         elif frequency == "monthly":
             purchase_day = st.selectbox(
-                "Dzień miesiąca zakupu (1-28)",
+                translate("purchase_day_monthly", language=st.session_state.language),
                 options=list(range(1, 29)),
                 index=0
             )
         elif frequency == "quarterly":
             purchase_day = st.selectbox(
-                "Dzień kwartału zakupu (1-90)",
+                translate("purchase_day_quarterly", language=st.session_state.language),
                 options=list(range(1, 91)),
                 index=0
             )
 
         years = st.slider(
-            label="Okres inwestycji (lata)",
+            label=translate("investment_period", language=st.session_state.language),
             min_value=1,
             max_value=30,
             value=10
         )
 
-        run_simulation = st.button("Rozpocznij symulację")
+        run_simulation = st.button(translate("start_simulation", language=st.session_state.language))
 
     if run_simulation:
         start_date = datetime.date.today()
@@ -111,7 +111,7 @@ def main():
             })
             schedule = pd.concat([start_purchase, schedule], ignore_index=True)
 
-        st.subheader("Harmonogram zakupów")
+        st.subheader(translate("purchase_schedule", language=st.session_state.language))
         st.dataframe(schedule)
 
         metal_prices = load_metal_prices("metal_prices.csv")
@@ -121,17 +121,17 @@ def main():
         portfolio = build_portfolio(schedule, metal_prices, allocation)
         portfolio_with_storage = calculate_storage_costs(portfolio, storage_fee_rate=0.005)
 
-        st.subheader("Zakupy i wartości metali")
+        st.subheader(translate("portfolio_values", language=st.session_state.language))
         st.dataframe(portfolio_with_storage)
 
         summary = aggregate_portfolio(portfolio_with_storage)
-        st.subheader("Podsumowanie portfela")
+        st.subheader(translate("portfolio_summary", language=st.session_state.language))
         st.dataframe(summary)
 
         total_storage = total_storage_cost(portfolio_with_storage)
-        st.success(f"Łączne koszty magazynowania: {total_storage:.2f} EUR")
+        st.success(f"{translate('storage_costs', language=st.session_state.language)}: {total_storage:.2f} EUR")
 
-        st.subheader("Wykres wartości portfela")
+        st.subheader(translate("portfolio_chart", language=st.session_state.language))
         plot_portfolio_value(portfolio_with_storage)
 
 if __name__ == "__main__":
