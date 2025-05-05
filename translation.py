@@ -1,4 +1,6 @@
-# /prometalle_app/app/core/translation.py
+# /main/translation.py
+
+from config import DEFAULT_LANGUAGE
 
 # Obsługa tłumaczeń aplikacji Prometalle
 
