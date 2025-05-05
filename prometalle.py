@@ -7,6 +7,7 @@ from purchase_schedule import generate_purchase_schedule
 from metals import load_metal_prices
 from portfolio import build_portfolio, aggregate_portfolio
 from storage_costs import calculate_storage_costs, total_storage_cost
+from charts import plot_portfolio_value
 import pandas as pd
 import datetime
 
@@ -90,6 +91,10 @@ def main():
         # Łączne koszty magazynowania
         total_storage = total_storage_cost(portfolio_with_storage)
         st.success(f"Łączne koszty magazynowania: {total_storage:.2f} EUR")
+
+        # Wykres wartości portfela
+        st.subheader("Wykres wartości portfela")
+        plot_portfolio_value(portfolio_with_storage)
 
 if __name__ == "__main__":
     main()
