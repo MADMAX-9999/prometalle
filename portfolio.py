@@ -1,7 +1,7 @@
-# /prometalle_app/app/core/portfolio.py
+# /main/portfolio.py
 
 import pandas as pd
-from app.core.metals import get_metal_price
+from metals import get_metal_price
 
 # Funkcja do budowania portfela inwestycyjnego
 def build_portfolio(
