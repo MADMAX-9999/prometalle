@@ -1,12 +1,12 @@
 # /prometalle_app/prometalle.py
 
 import streamlit as st
-from app.core.config import AVAILABLE_LANGUAGES, AVAILABLE_CURRENCIES, AVAILABLE_UNITS, DEFAULT_LANGUAGE, DEFAULT_CURRENCY, DEFAULT_UNIT
-from app.core.translation import translate
-from app.core.purchase_schedule import generate_purchase_schedule
-from app.core.metals import load_metal_prices
-from app.core.portfolio import build_portfolio, aggregate_portfolio
-from app.core.storage_costs import calculate_storage_costs, total_storage_cost
+from core.config import AVAILABLE_LANGUAGES, AVAILABLE_CURRENCIES, AVAILABLE_UNITS, DEFAULT_LANGUAGE, DEFAULT_CURRENCY, DEFAULT_UNIT
+from core.translation import translate
+from core.purchase_schedule import generate_purchase_schedule
+from core.metals import load_metal_prices
+from core.portfolio import build_portfolio, aggregate_portfolio
+from core.storage_costs import calculate_storage_costs, total_storage_cost
 import pandas as pd
 import datetime
 
@@ -70,7 +70,7 @@ def main():
         st.dataframe(schedule)
 
         # Załaduj ceny metali (tymczasowe dane przykładowe)
-        metal_prices = load_metal_prices("app/data/metal_prices.csv")
+        metal_prices = load_metal_prices("data/metal_prices.csv")
 
         # Alokacja metali (przykład)
         allocation = {"gold": 50, "silver": 30, "platinum": 10, "palladium": 10}
