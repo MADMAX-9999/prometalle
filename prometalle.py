@@ -135,6 +135,35 @@ def main():
                         index=0
                     )
 
+        with st.expander(translate("storage_cost_settings", language=st.session_state.language), expanded=False):
+            storage_base = st.selectbox(
+                translate("storage_base", language=st.session_state.language),
+                options=["value", "invested_amount"],
+                index=0
+            )
+
+            storage_frequency = st.selectbox(
+                translate("storage_frequency", language=st.session_state.language),
+                options=["monthly", "yearly"],
+                index=0
+            )
+
+            storage_rate = st.number_input(
+                translate("storage_rate", language=st.session_state.language),
+                min_value=0.0,
+                value=0.05,
+                step=0.01,
+                format="%.2f"
+            )
+
+            vat_rate = st.number_input(
+                translate("vat_rate", language=st.session_state.language),
+                min_value=0.0,
+                value=19.0,
+                step=1.0,
+                format="%.1f"
+            )
+
         run_simulation = st.button(translate("start_simulation", language=st.session_state.language))
 
     if run_simulation:
@@ -173,7 +202,13 @@ def main():
         }
 
         portfolio = build_portfolio(schedule, metal_prices_converted, allocation)
-        portfolio_with_storage = calculate_storage_costs(portfolio, storage_fee_rate=0.005)
+        portfolio_with_storage = calculate_storage_costs(
+            portfolio,
+            storage_fee_rate=storage_rate,
+            storage_base=storage_base,
+            storage_frequency=storage_frequency,
+            vat_rate=vat_rate
+        )
 
         st.subheader(translate("portfolio_values", language=st.session_state.language))
         st.dataframe(portfolio_with_storage)
