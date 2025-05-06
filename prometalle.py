@@ -1,3 +1,5 @@
+# /main/prometalle.py
+
 import streamlit as st
 from config import AVAILABLE_LANGUAGES, AVAILABLE_CURRENCIES, AVAILABLE_UNITS, DEFAULT_LANGUAGE, DEFAULT_CURRENCY, DEFAULT_UNIT
 from translation import translate
@@ -14,6 +16,7 @@ LANGUAGE_LABELS = {
     "en": "English",
     "de": "Deutsch"
 }
+
 
 def main():
     st.set_page_config(page_title="Prometalle", page_icon="✨", layout="wide")
@@ -59,6 +62,20 @@ def main():
             value=100000.0,
             step=100.0
         )
+
+        st.markdown(translate("allocation_settings", language=st.session_state.language))
+
+        gold_allocation = st.slider("Złoto (%)", 0, 100, 40)
+        silver_allocation = st.slider("Srebro (%)", 0, 100, 30)
+        platinum_allocation = st.slider("Platyna (%)", 0, 100, 15)
+        palladium_allocation = st.slider("Pallad (%)", 0, 100, 15)
+
+        allocation_sum = gold_allocation + silver_allocation + platinum_allocation + palladium_allocation
+
+        st.write(f"**{translate('total_allocation', language=st.session_state.language)}:** {allocation_sum}%")
+
+        if allocation_sum != 100:
+            st.error(translate("allocation_error", language=st.session_state.language))
 
         start_date = st.date_input(
             label=translate("start_date", language=st.session_state.language),
@@ -108,7 +125,7 @@ def main():
 
         run_simulation = st.button(translate("start_simulation", language=st.session_state.language))
 
-    if run_simulation:
+    if run_simulation and allocation_sum == 100:
         metal_prices_converted = convert_prices_to_currency(metal_prices, exchange_rates, selected_currency)
 
         if recurring_amount > 0:
@@ -132,7 +149,12 @@ def main():
         st.subheader(translate("purchase_schedule", language=st.session_state.language))
         st.dataframe(schedule)
 
-        allocation = {"gold": 50, "silver": 30, "platinum": 10, "palladium": 10}
+        allocation = {
+            "gold": gold_allocation,
+            "silver": silver_allocation,
+            "platinum": platinum_allocation,
+            "palladium": palladium_allocation
+        }
 
         portfolio = build_portfolio(schedule, metal_prices_converted, allocation)
         portfolio_with_storage = calculate_storage_costs(portfolio, storage_fee_rate=0.005)
