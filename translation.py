@@ -87,7 +87,18 @@ TRANSLATIONS = {
         "pl": "Wykres wartości portfela",
         "en": "Portfolio value chart",
         "de": "Wertdiagramm des Portfolios"
+    },
+    "start_date": {
+        "pl": "Data rozpoczęcia inwestycji",
+        "en": "Investment start date",
+        "de": "Anfangsdatum der Investition"
+    },
+    "end_date": {
+        "pl": "Data zakończenia inwestycji",
+        "en": "Investment end date",
+        "de": "Enddatum der Investition"
     }
+    
 }
 
 def translate(key: str, language: str = DEFAULT_LANGUAGE) -> str:
