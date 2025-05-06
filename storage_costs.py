@@ -1,28 +1,30 @@
-# /prometalle_app/app/core/storage_costs.py
+# /main/storage_costs.py
 
 import pandas as pd
 
-# Funkcja do obliczenia kosztów magazynowania
-def calculate_storage_costs(
-    df_portfolio: pd.DataFrame,
-    storage_fee_rate: float
-) -> pd.DataFrame:
+def calculate_storage_costs(df_portfolio: pd.DataFrame, storage_fee_rate: float = 0.005) -> pd.DataFrame:
     """
-    Oblicza skumulowane koszty magazynowania aktywów.
-    - storage_fee_rate w formacie np. 0.005 = 0.5% rocznie
-    Zwraca DataFrame z dodaną kolumną 'Koszt_magazynowania_EUR'.
+    Dodaje kolumny kosztu magazynowania i wartości po kosztach.
+
+    Args:
+        df_portfolio: DataFrame z portfelem inwestycyjnym.
+        storage_fee_rate: roczna stawka opłaty magazynowej (domyślnie 0,5%).
+
+    Returns:
+        DataFrame z dodatkowymi kolumnami.
     """
-    df_portfolio = df_portfolio.copy()
-
-    # Oblicz koszt magazynowania dla każdej pozycji (proporcjonalnie do kwoty)
-    df_portfolio['Koszt_magazynowania_EUR'] = df_portfolio['Kwota_EUR'] * storage_fee_rate
-
+    df_portfolio['Koszt_magazynowania'] = df_portfolio['Kwota'] * storage_fee_rate
+    df_portfolio['Kwota_po_kosztach'] = df_portfolio['Kwota'] - df_portfolio['Koszt_magazynowania']
     return df_portfolio
-
-# Funkcja do sumowania kosztów magazynowania
 
 def total_storage_cost(df_portfolio: pd.DataFrame) -> float:
     """
-    Sumuje wszystkie koszty magazynowania.
+    Oblicza łączny koszt magazynowania dla całego portfela.
+
+    Args:
+        df_portfolio: DataFrame z portfelem inwestycyjnym.
+
+    Returns:
+        Całkowity koszt magazynowania.
     """
-    return df_portfolio['Koszt_magazynowania_EUR'].sum()
+    return df_portfolio['Koszt_magazynowania'].sum()
