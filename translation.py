@@ -202,6 +202,11 @@ TRANSLATIONS = {
         "pl": "Marża przy sprzedaży (%)",
         "en": "Sale Margin (%)",
         "de": "Verkaufsmarge (%)"
+    },
+    "transaction_register": {
+        "pl": "Rejestr operacji",
+        "en": "Transaction Register",
+        "de": "Transaktionsregister"
     }
     
 }
