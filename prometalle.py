@@ -65,10 +65,10 @@ def main():
 
         st.markdown(translate("allocation_settings", language=st.session_state.language))
 
-        gold_allocation = st.slider("Złoto (%)", 0, 100, 40)
-        silver_allocation = st.slider("Srebro (%)", 0, 100, 30)
-        platinum_allocation = st.slider("Platyna (%)", 0, 100, 15)
-        palladium_allocation = st.slider("Pallad (%)", 0, 100, 15)
+        gold_allocation = st.slider("Złoto (%)", 0, 100, 40, step=5)
+        silver_allocation = st.slider("Srebro (%)", 0, 100, 30, step=5)
+        platinum_allocation = st.slider("Platyna (%)", 0, 100, 15, step=5)
+        palladium_allocation = st.slider("Pallad (%)", 0, 100, 15, step=5)
 
         allocation_sum = gold_allocation + silver_allocation + platinum_allocation + palladium_allocation
 
