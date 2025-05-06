@@ -209,7 +209,7 @@ def main():
 
         portfolio = build_portfolio(schedule, metal_prices_converted, allocation)
         portfolio_with_storage = calculate_storage_costs(
-            portfolio,
+            df_portfolio=portfolio,
             storage_fee_rate=storage_rate,
             storage_base=storage_base,
             storage_frequency=storage_frequency,
