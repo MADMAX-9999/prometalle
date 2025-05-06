@@ -102,6 +102,21 @@ TRANSLATIONS = {
         "pl": "Data zakończenia inwestycji",
         "en": "Investment end date",
         "de": "Enddatum der Investition"
+    },
+    "allocation_settings": {
+        "pl": "Ustawienia alokacji kapitału",
+        "en": "Capital allocation settings",
+        "de": "Kapitalallokationseinstellungen"
+    },
+    "total_allocation": {
+        "pl": "Łączna alokacja",
+        "en": "Total allocation",
+        "de": "Gesamtallokation"
+    },
+    "allocation_error": {
+        "pl": "⚠️ Łączna alokacja musi wynosić 100%!",
+        "en": "⚠️ Total allocation must be 100%!",
+        "de": "⚠️ Die Gesamtallokation muss 100% betragen!"
     }
     
 }
