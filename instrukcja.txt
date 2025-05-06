@@ -1,0 +1,166 @@
+# Prometalle - Struktura projektu i instrukcja wdrożenia
+
+## Struktura katalogów
+
+Poniżej znajduje się kompletna struktura katalogów projektu Prometalle:
+
+```
+prometalle/
+│
+├── app.py                       # Główny plik aplikacji Streamlit
+│
+├── requirements.txt             # Wymagane biblioteki
+│
+├── README.md                    # Dokumentacja projektu
+│
+├── LICENSE                      # Plik licencji MIT
+│
+├── data/                        # Katalog z danymi historycznymi
+│   ├── metal_prices.csv         # Historyczne ceny metali szlachetnych
+│   ├── exchange_rates.csv       # Kursy walutowe EUR/PLN i EUR/USD
+│   └── inflation_rates_ready.csv # Dane o inflacji dla różnych walut
+│
+├── assets/                      # Zasoby statyczne
+│   ├── styles.css               # Arkusz stylów CSS
+│   ├── logo.png                 # Logo aplikacji
+│   └── favicon.ico              # Ikona aplikacji
+│
+├── modules/                     # Moduły funkcjonalne aplikacji
+│   ├── __init__.py              # Inicjalizacja pakietu
+│   ├── analysis.py              # Moduł analizy inwestycji
+│   ├── config.py                # Konfiguracja i stałe aplikacji
+│   ├── inflation.py             # Obsługa inflacji
+│   ├── metals.py                # Obsługa cen metali
+│   ├── portfolio.py             # Zarządzanie portfelem inwestycyjnym
+│   ├── purchase_schedule.py     # Generowanie harmonogramów zakupów
+│   ├── storage_costs.py         # Obliczanie kosztów magazynowania
+│   ├── translation.py           # Tłumaczenia (wielojęzyczność)
+│   ├── utils.py                 # Funkcje pomocnicze
+│   └── visualization.py         # Generowanie wykresów i wizualizacji
+│
+└── tests/                       # Testy jednostkowe
+    ├── __init__.py              # Inicjalizacja pakietu testów
+    ├── test_analysis.py         # Testy modułu analizy
+    ├── test_portfolio.py        # Testy modułu portfela
+    └── test_visualization.py    # Testy modułu wizualizacji
+```
+
+## Instrukcja wdrożenia
+
+### 1. Wymagania systemowe
+
+- Python 3.8 lub nowszy
+- Git
+- Dostęp do terminala/wiersza poleceń
+
+### 2. Lokalne wdrożenie
+
+1. **Sklonuj repozytorium**:
+   ```bash
+   git clone https://github.com/twoja-nazwa/prometalle.git
+   cd prometalle
+   ```
+
+2. **Stwórz wirtualne środowisko** (opcjonalnie, ale zalecane):
+   ```bash
+   python -m venv venv
+   
+   # Aktywacja na Windows
+   venv\Scripts\activate
+   
+   # Aktywacja na macOS/Linux
+   source venv/bin/activate
+   ```
+
+3. **Zainstaluj wymagane zależności**:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+4. **Uruchom aplikację**:
+   ```bash
+   streamlit run app.py
+   ```
+
+5. **Otwórz aplikację w przeglądarce**:
+   Aplikacja będzie dostępna pod adresem [http://localhost:8501](http://localhost:8501)
+
+### 3. Wdrożenie w Streamlit Cloud
+
+Aby wdrożyć aplikację w Streamlit Cloud, wykonaj następujące kroki:
+
+1. **Utwórz repozytorium GitHub** zawierające kod aplikacji
+
+2. **Zaloguj się do [Streamlit Cloud](https://streamlit.io/cloud)**
+
+3. **Kliknij przycisk "New app"**
+
+4. **Wybierz repozytorium, gałąź i plik główny**:
+   - Repository: wybierz repozytorium z kodem aplikacji
+   - Branch: główna gałąź (np. main lub master)
+   - Main file path: app.py
+
+5. **Kliknij "Deploy!"**
+
+6. **Poczekaj na wdrożenie** - aplikacja będzie publicznie dostępna pod wygenerowanym adresem URL
+
+### 4. Aktualizacja danych
+
+Dane historyczne cen metali i kursów walut znajdują się w katalogu `data/`. Aby zaktualizować te dane:
+
+1. **Pobierz najnowsze dane** z dostępnych źródeł:
+   - Ceny metali: [LBMA](https://www.lbma.org.uk/prices-and-data/precious-metal-prices)
+   - Kursy walut: [European Central Bank](https://www.ecb.europa.eu/stats/policy_and_exchange_rates/euro_reference_exchange_rates/html/index.en.html)
+
+2. **Zaktualizuj pliki CSV** w katalogu `data/`, zachowując ich format:
+   - `metal_prices.csv` - kolumny: Data, Gold_EUR, Silver_EUR, Platinum_EUR, Palladium_EUR
+   - `exchange_rates.csv` - kolumny: Data, EUR_PLN, EUR_USD
+   - `inflation_rates_ready.csv` - kolumny: Rok, waluta, roczna_inflacja
+
+3. **Uruchom ponownie aplikację**, aby uwzględnić nowe dane
+
+### 5. Dostosowanie interfejsu
+
+Aby dostosować wygląd aplikacji:
+
+1. **Zmodyfikuj plik CSS** znajdujący się w `assets/styles.css`
+
+2. **Dostosuj konfigurację** w pliku `modules/config.py`, gdzie możesz zmienić:
+   - Domyślne wartości
+   - Dostępne waluty i jednostki
+   - Kolory metali do wykresów
+   - Domyślne alokacje
+   - I wiele innych ustawień
+
+### 6. Dodawanie nowych funkcji
+
+Przy dodawaniu nowych funkcjonalności, zachowaj modułową strukturę projektu:
+
+1. **Twórz nowe moduły** w katalogu `modules/` dla każdej większej funkcjonalności
+
+2. **Importuj nowe moduły** w pliku `app.py`
+
+3. **Dodawaj tłumaczenia** dla nowych elementów interfejsu w pliku `modules/translation.py`
+
+4. **Aktualizuj dokumentację** w README.md
+
+### 7. Rozwiązywanie problemów
+
+Jeśli napotkasz problemy podczas wdrażania:
+
+1. **Sprawdź logi** aplikacji Streamlit
+
+2. **Upewnij się, że wszystkie zależności** są zainstalowane poprawnie
+
+3. **Sprawdź formatowanie plików CSV** - niepoprawne formatowanie może powodować błędy
+
+4. **Sprawdź uprawnienia** do odczytu/zapisu plików
+
+## Wskazówki dotyczące rozwoju
+
+- **Zachowaj separację warstw** - logika biznesowa powinna być oddzielona od interfejsu użytkownika
+- **Dodawaj testy jednostkowe** dla nowych funkcjonalności
+- **Używaj cachowania Streamlit** (`@st.cache_data`, `@st.cache_resource`) dla kosztownych obliczeniowo operacji
+- **Unikaj hardkodowania tekstu** - używaj systemu tłumaczeń dla wszystkich elementów interfejsu
+- **Korzystaj z konfiguracji** w `config.py` zamiast rozpraszania stałych w kodzie
+- **Dokumentuj kod** używając docstringów i komentarzy
