@@ -187,6 +187,21 @@ TRANSLATIONS = {
         "pl": "Wszystkie metale",
         "en": "All metals",
         "de": "Alle Metalle"
+    },
+    "margin_settings": {
+        "pl": "Marże i koszty transakcyjne",
+        "en": "Margins and Transaction Costs",
+        "de": "Margen und Transaktionskosten"
+    },
+    "purchase_margin": {
+        "pl": "Marża przy zakupie (%)",
+        "en": "Purchase Margin (%)",
+        "de": "Kaufmarge (%)"
+    },
+    "sale_margin": {
+        "pl": "Marża przy sprzedaży (%)",
+        "en": "Sale Margin (%)",
+        "de": "Verkaufsmarge (%)"
     }
     
 }
