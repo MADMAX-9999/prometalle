@@ -170,6 +170,24 @@ def main():
                 index=0
             )
 
+        with st.expander(translate("margin_settings", language=st.session_state.language), expanded=False):
+            purchase_margin = st.number_input(
+                translate("purchase_margin", language=st.session_state.language),
+                min_value=0.0,
+                max_value=5.0,
+                value=2.0,
+                step=0.1,
+                format="%.1f"
+            )
+            sale_margin = st.number_input(
+                translate("sale_margin", language=st.session_state.language),
+                min_value=0.0,
+                max_value=5.0,
+                value=1.5,
+                step=0.1,
+                format="%.1f"
+            )
+
         run_simulation = st.button(translate("start_simulation", language=st.session_state.language))
 
     if run_simulation:
@@ -227,7 +245,7 @@ def main():
         total_storage = total_storage_cost(portfolio_with_storage)
         st.success(f"{translate('storage_costs', language=st.session_state.language)}: {total_storage:.2f} {selected_currency}")
 
-        st.subheader(translate("portfolio_chart", language=st.session_state.language))
+        st.subheader(translate("deposit_chart", language=st.session_state.language))
         plot_portfolio_value(portfolio_with_storage)
 
 if __name__ == "__main__":
