@@ -152,6 +152,41 @@ TRANSLATIONS = {
         "pl": "Stawka VAT (%)",
         "en": "VAT rate (%)",
         "de": "Mehrwertsteuersatz (%)"
+    },
+    "cover_method": {
+        "pl": "Pokrycie kosztów magazynowych",
+        "en": "Storage cost coverage",
+        "de": "Deckung der Lagerkosten"
+    },
+    "cash": {
+        "pl": "Gotówka",
+        "en": "Cash",
+        "de": "Bargeld"
+    },
+    "gold": {
+        "pl": "Złoto",
+        "en": "Gold",
+        "de": "Gold"
+    },
+    "silver": {
+        "pl": "Srebro",
+        "en": "Silver",
+        "de": "Silber"
+    },
+    "platinum": {
+        "pl": "Platyna",
+        "en": "Platinum",
+        "de": "Platin"
+    },
+    "palladium": {
+        "pl": "Pallad",
+        "en": "Palladium",
+        "de": "Palladium"
+    },
+    "all_metals": {
+        "pl": "Wszystkie metale",
+        "en": "All metals",
+        "de": "Alle Metalle"
     }
     
 }
