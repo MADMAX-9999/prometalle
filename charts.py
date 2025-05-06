@@ -1,30 +1,30 @@
 # /main/charts.py
 
-import pandas as pd
 import matplotlib.pyplot as plt
+import pandas as pd
+import streamlit as st
 
-# Funkcja do tworzenia wykresu wartości portfela
-def plot_portfolio_value(df_portfolio: pd.DataFrame) -> None:
+def plot_portfolio_value(df_portfolio: pd.DataFrame):
     """
     Rysuje wykres wartości portfela w czasie.
+
+    Args:
+        df_portfolio: DataFrame z historią inwestycji.
     """
     if df_portfolio.empty:
+        st.warning("Brak danych do wyświetlenia wykresu.")
         return
 
-    # Grupowanie zakupów według daty
     df_by_date = df_portfolio.groupby('Data').agg({
-        'Kwota_EUR': 'sum'
-    }).sort_index()
+        'Kwota_po_kosztach': 'sum'
+    }).reset_index()
 
-    # Skumulowana wartość portfela
-    df_by_date['Wartość skumulowana EUR'] = df_by_date['Kwota_EUR'].cumsum()
+    fig, ax = plt.subplots(figsize=(10, 6))
+    ax.plot(df_by_date['Data'], df_by_date['Kwota_po_kosztach'], marker='o')
+    ax.set_title("Rozwój wartości portfela w czasie")
+    ax.set_xlabel("Data")
+    ax.set_ylabel("Wartość portfela")
+    ax.grid(True)
+    fig.autofmt_xdate()
 
-    # Rysowanie wykresu
-    plt.figure(figsize=(10, 6))
-    plt.plot(df_by_date.index, df_by_date['Wartość skumulowana EUR'], marker='o')
-    plt.title("Rozwój wartości portfela w czasie")
-    plt.xlabel("Data")
-    plt.ylabel("Wartość portfela (EUR)")
-    plt.grid(True)
-    plt.tight_layout()
-    plt.show()
+    st.pyplot(fig)
