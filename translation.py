@@ -117,6 +117,16 @@ TRANSLATIONS = {
         "pl": "⚠️ Łączna alokacja musi wynosić 100%!",
         "en": "⚠️ Total allocation must be 100%!",
         "de": "⚠️ Die Gesamtallokation muss 100% betragen!"
+    },
+    "recurring_purchase_settings": {
+        "pl": "Ustawienia zakupów systematycznych",
+        "en": "Recurring purchase settings",
+        "de": "Einstellungen für regelmäßige Käufe"
+    },
+    "one_time": {
+        "pl": "Jednorazowy",
+        "en": "One-time",
+        "de": "Einmalig"
     }
     
 }
