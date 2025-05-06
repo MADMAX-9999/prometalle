@@ -4,7 +4,7 @@ import streamlit as st
 from config import AVAILABLE_LANGUAGES, AVAILABLE_CURRENCIES, AVAILABLE_UNITS, DEFAULT_LANGUAGE, DEFAULT_CURRENCY, DEFAULT_UNIT
 from translation import translate
 from purchase_schedule import generate_purchase_schedule
-from metals import load_metal_prices
+from metals import load_metal_prices, load_exchange_rates, convert_prices_to_currency
 from portfolio import build_portfolio, aggregate_portfolio
 from storage_costs import calculate_storage_costs, total_storage_cost
 from charts import plot_portfolio_value
@@ -25,6 +25,12 @@ def main():
 
     if 'language' not in st.session_state:
         st.session_state.language = 'pl'
+
+    metal_prices = load_metal_prices("metal_prices.csv")
+    exchange_rates = load_exchange_rates("exchange_rates.csv")
+
+    min_date = metal_prices['Data'].min().date()
+    max_date = metal_prices['Data'].max().date()
 
     with st.sidebar:
         st.header(translate("simulation_settings", language=st.session_state.language))
@@ -55,6 +61,21 @@ def main():
             value=100000.0,
             step=100.0
         )
+
+        start_date = st.date_input(
+            label=translate("start_date", language=st.session_state.language),
+            value=min_date,
+            min_value=min_date,
+            max_value=max_date
+        )
+
+        end_date = st.date_input(
+            label=translate("end_date", language=st.session_state.language),
+            value=max_date,
+            min_value=min_date,
+            max_value=max_date
+        )
+
         recurring_amount = st.number_input(
             label=translate("recurring_amount", language=st.session_state.language),
             min_value=0.0,
@@ -87,18 +108,10 @@ def main():
                 index=0
             )
 
-        years = st.slider(
-            label=translate("investment_period", language=st.session_state.language),
-            min_value=1,
-            max_value=30,
-            value=10
-        )
-
         run_simulation = st.button(translate("start_simulation", language=st.session_state.language))
 
     if run_simulation:
-        start_date = datetime.date.today()
-        end_date = start_date + datetime.timedelta(days=years * 365)
+        metal_prices_converted = convert_prices_to_currency(metal_prices, exchange_rates, selected_currency)
 
         if recurring_amount > 0:
             schedule = generate_purchase_schedule(
@@ -121,11 +134,9 @@ def main():
         st.subheader(translate("purchase_schedule", language=st.session_state.language))
         st.dataframe(schedule)
 
-        metal_prices = load_metal_prices("metal_prices.csv")
-
         allocation = {"gold": 50, "silver": 30, "platinum": 10, "palladium": 10}
 
-        portfolio = build_portfolio(schedule, metal_prices, allocation)
+        portfolio = build_portfolio(schedule, metal_prices_converted, allocation)
         portfolio_with_storage = calculate_storage_costs(portfolio, storage_fee_rate=0.005)
 
         st.subheader(translate("portfolio_values", language=st.session_state.language))
@@ -136,7 +147,7 @@ def main():
         st.dataframe(summary)
 
         total_storage = total_storage_cost(portfolio_with_storage)
-        st.success(f"{translate('storage_costs', language=st.session_state.language)}: {total_storage:.2f} EUR")
+        st.success(f"{translate('storage_costs', language=st.session_state.language)}: {total_storage:.2f} {selected_currency}")
 
         st.subheader(translate("portfolio_chart", language=st.session_state.language))
         plot_portfolio_value(portfolio_with_storage)
