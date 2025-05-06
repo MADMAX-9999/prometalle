@@ -18,6 +18,11 @@ TRANSLATIONS = {
         "en": "Choose weight unit",
         "de": "Gewichtseinheit wählen"
     },
+    "general_settings": {
+        "pl": "Ustawienia ogólne",
+        "en": "General settings",
+        "de": "Allgemeine Einstellungen"
+    },
     "simulation_settings": {
         "pl": "Ustawienia symulacji",
         "en": "Simulation settings",
