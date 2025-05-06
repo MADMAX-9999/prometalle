@@ -1,5 +1,3 @@
-# /main/prometalle.py
-
 import streamlit as st
 from config import AVAILABLE_LANGUAGES, AVAILABLE_CURRENCIES, AVAILABLE_UNITS, DEFAULT_LANGUAGE, DEFAULT_CURRENCY, DEFAULT_UNIT
 from translation import translate
@@ -17,7 +15,6 @@ LANGUAGE_LABELS = {
     "de": "Deutsch"
 }
 
-# Funkcja inicjująca ekran startowy i symulację
 def main():
     st.set_page_config(page_title="Prometalle", page_icon="✨", layout="wide")
 
@@ -35,25 +32,26 @@ def main():
     with st.sidebar:
         st.header(translate("simulation_settings", language=st.session_state.language))
 
-        selected_language_label = st.selectbox(
-            translate("choose_language", language=st.session_state.language),
-            options=[LANGUAGE_LABELS[code] for code in AVAILABLE_LANGUAGES],
-            index=AVAILABLE_LANGUAGES.index('pl')
-        )
-        selected_language = [code for code, label in LANGUAGE_LABELS.items() if label == selected_language_label][0]
-        st.session_state.language = selected_language
+        with st.expander(translate("general_settings", language=st.session_state.language), expanded=False):
+            selected_language_label = st.selectbox(
+                translate("choose_language", language=st.session_state.language),
+                options=[LANGUAGE_LABELS[code] for code in AVAILABLE_LANGUAGES],
+                index=AVAILABLE_LANGUAGES.index('pl')
+            )
+            selected_language = [code for code, label in LANGUAGE_LABELS.items() if label == selected_language_label][0]
+            st.session_state.language = selected_language
 
-        selected_currency = st.selectbox(
-            translate("choose_currency", language=st.session_state.language),
-            options=AVAILABLE_CURRENCIES,
-            index=AVAILABLE_CURRENCIES.index('EUR')
-        )
-        selected_unit = st.selectbox(
-            translate("choose_unit", language=st.session_state.language),
-            options=AVAILABLE_UNITS,
-            index=AVAILABLE_UNITS.index('g'),
-            format_func=lambda x: {"g": "Gramy (g)", "oz": "Uncje (oz)"}.get(x, x)
-        )
+            selected_currency = st.selectbox(
+                translate("choose_currency", language=st.session_state.language),
+                options=AVAILABLE_CURRENCIES,
+                index=AVAILABLE_CURRENCIES.index('EUR')
+            )
+            selected_unit = st.selectbox(
+                translate("choose_unit", language=st.session_state.language),
+                options=AVAILABLE_UNITS,
+                index=AVAILABLE_UNITS.index('g'),
+                format_func=lambda x: {"g": "Gramy (g)", "oz": "Uncje (oz)"}.get(x, x)
+            )
 
         start_amount = st.number_input(
             label=translate("start_amount", language=st.session_state.language),
