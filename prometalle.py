@@ -1,6 +1,8 @@
 # /main/prometalle.py
 
 import streamlit as st
+import pandas as pd
+import datetime
 from config import AVAILABLE_LANGUAGES, AVAILABLE_CURRENCIES, AVAILABLE_UNITS, DEFAULT_LANGUAGE, DEFAULT_CURRENCY, DEFAULT_UNIT
 from translation import translate
 from purchase_schedule import generate_purchase_schedule
@@ -8,15 +10,12 @@ from metals import load_metal_prices, load_exchange_rates, convert_prices_to_cur
 from portfolio import build_portfolio, aggregate_portfolio
 from storage_costs import calculate_storage_costs, total_storage_cost
 from charts import plot_portfolio_value
-import pandas as pd
-import datetime
 
 LANGUAGE_LABELS = {
     "pl": "Polski",
     "en": "English",
     "de": "Deutsch"
 }
-
 
 def main():
     st.set_page_config(page_title="Prometalle", page_icon="✨", layout="wide")
@@ -26,8 +25,16 @@ def main():
     if 'language' not in st.session_state:
         st.session_state.language = 'pl'
 
-    metal_prices = load_metal_prices("metal_prices.csv")
-    exchange_rates = load_exchange_rates("exchange_rates.csv")
+    try:
+        metal_prices = load_metal_prices("metal_prices.csv")
+        exchange_rates = load_exchange_rates("exchange_rates.csv")
+    except Exception as e:
+        st.error(f"Błąd ładowania danych: {e}")
+        return
+
+    if metal_prices.empty or exchange_rates.empty:
+        st.error("Brak danych w plikach CSV.")
+        return
 
     min_date = metal_prices['Data'].min().date()
     max_date = metal_prices['Data'].max().date()
@@ -75,7 +82,7 @@ def main():
         st.write(f"**{translate('total_allocation', language=st.session_state.language)}:** {allocation_sum}%")
 
         if allocation_sum != 100:
-            st.error(translate("allocation_error", language=st.session_state.language))
+            st.warning(translate("allocation_error", language=st.session_state.language))
 
         start_date = st.date_input(
             label=translate("start_date", language=st.session_state.language),
@@ -125,7 +132,11 @@ def main():
 
         run_simulation = st.button(translate("start_simulation", language=st.session_state.language))
 
-    if run_simulation and allocation_sum == 100:
+    if run_simulation:
+        if allocation_sum != 100:
+            st.error(translate("allocation_error", language=st.session_state.language))
+            return
+
         metal_prices_converted = convert_prices_to_currency(metal_prices, exchange_rates, selected_currency)
 
         if recurring_amount > 0:
