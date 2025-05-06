@@ -127,6 +127,31 @@ TRANSLATIONS = {
         "pl": "Jednorazowy",
         "en": "One-time",
         "de": "Einmalig"
+    },
+    "storage_cost_settings": {
+        "pl": "Koszty magazynowe",
+        "en": "Storage cost settings",
+        "de": "Lagerkosteneinstellungen"
+    },
+    "storage_base": {
+        "pl": "Podstawa naliczania kosztu",
+        "en": "Storage cost base",
+        "de": "Berechnungsgrundlage Lagerkosten"
+    },
+    "storage_frequency": {
+        "pl": "Częstotliwość naliczania",
+        "en": "Storage frequency",
+        "de": "Häufigkeit der Lagerkosten"
+    },
+    "storage_rate": {
+        "pl": "Stawka magazynowania (%)",
+        "en": "Storage rate (%)",
+        "de": "Lagerkostensatz (%)"
+    },
+    "vat_rate": {
+        "pl": "Stawka VAT (%)",
+        "en": "VAT rate (%)",
+        "de": "Mehrwertsteuersatz (%)"
     }
     
 }
