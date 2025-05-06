@@ -9,7 +9,6 @@ from purchase_schedule import generate_purchase_schedule
 from metals import load_metal_prices, load_exchange_rates, convert_prices_to_currency
 from portfolio import build_portfolio, aggregate_portfolio
 from storage_costs import calculate_storage_costs, total_storage_cost
-from charts import plot_portfolio_value
 
 LANGUAGE_LABELS = {
     "pl": "Polski",
@@ -215,9 +214,6 @@ def main():
             })
             schedule = pd.concat([start_purchase, schedule], ignore_index=True)
 
-        st.subheader(translate("purchase_schedule", language=st.session_state.language))
-        st.dataframe(schedule)
-
         allocation = {
             "gold": gold_allocation,
             "silver": silver_allocation,
@@ -235,7 +231,7 @@ def main():
             cover_method=cover_method
         )
 
-        st.subheader(translate("portfolio_values", language=st.session_state.language))
+        st.subheader(translate("transaction_register", language=st.session_state.language))
         st.dataframe(portfolio_with_storage)
 
         summary = aggregate_portfolio(portfolio_with_storage)
@@ -245,9 +241,5 @@ def main():
         total_storage = total_storage_cost(portfolio_with_storage)
         st.success(f"{translate('storage_costs', language=st.session_state.language)}: {total_storage:.2f} {selected_currency}")
 
-        st.subheader(translate("deposit_chart", language=st.session_state.language))
-        plot_portfolio_value(portfolio_with_storage)
-
 if __name__ == "__main__":
     main()
-
