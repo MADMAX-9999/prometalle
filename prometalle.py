@@ -98,37 +98,42 @@ def main():
             max_value=max_date
         )
 
-        recurring_amount = st.number_input(
-            label=translate("recurring_amount", language=st.session_state.language),
-            min_value=0.0,
-            value=250.0,
-            step=50.0
-        )
+        with st.expander(translate("recurring_purchase_settings", language=st.session_state.language), expanded=False):
+            frequency = st.selectbox(
+                label=translate("frequency", language=st.session_state.language),
+                options=["one_time", "weekly", "monthly", "quarterly"],
+                index=0
+            )
 
-        frequency = st.selectbox(
-            label=translate("frequency", language=st.session_state.language),
-            options=["weekly", "monthly", "quarterly"],
-            index=0
-        )
+            recurring_amount = 0.0
+            purchase_day = 0
 
-        if frequency == "weekly":
-            purchase_day = st.selectbox(
-                translate("purchase_day_weekly", language=st.session_state.language),
-                options=list(range(0, 5)),
-                index=0
-            )
-        elif frequency == "monthly":
-            purchase_day = st.selectbox(
-                translate("purchase_day_monthly", language=st.session_state.language),
-                options=list(range(1, 29)),
-                index=0
-            )
-        elif frequency == "quarterly":
-            purchase_day = st.selectbox(
-                translate("purchase_day_quarterly", language=st.session_state.language),
-                options=list(range(1, 91)),
-                index=0
-            )
+            if frequency != "one_time":
+                recurring_amount = st.number_input(
+                    label=translate("recurring_amount", language=st.session_state.language),
+                    min_value=0.0,
+                    value=250.0,
+                    step=50.0
+                )
+
+                if frequency == "weekly":
+                    purchase_day = st.selectbox(
+                        translate("purchase_day_weekly", language=st.session_state.language),
+                        options=list(range(0, 5)),
+                        index=0
+                    )
+                elif frequency == "monthly":
+                    purchase_day = st.selectbox(
+                        translate("purchase_day_monthly", language=st.session_state.language),
+                        options=list(range(1, 29)),
+                        index=0
+                    )
+                elif frequency == "quarterly":
+                    purchase_day = st.selectbox(
+                        translate("purchase_day_quarterly", language=st.session_state.language),
+                        options=list(range(1, 91)),
+                        index=0
+                    )
 
         run_simulation = st.button(translate("start_simulation", language=st.session_state.language))
 
@@ -139,7 +144,7 @@ def main():
 
         metal_prices_converted = convert_prices_to_currency(metal_prices, exchange_rates, selected_currency)
 
-        if recurring_amount > 0:
+        if frequency != "one_time" and recurring_amount > 0:
             schedule = generate_purchase_schedule(
                 start_date=start_date.strftime("%Y-%m-%d"),
                 end_date=end_date.strftime("%Y-%m-%d"),
