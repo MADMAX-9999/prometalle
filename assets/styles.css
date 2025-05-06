@@ -1,0 +1,471 @@
+/* assets/styles.css */
+/* Podstawowe style dla aplikacji Prometalle */
+
+/* Zmienne kolorów */
+:root {
+    --primary-color: #1E3A8A;
+    --primary-light: #3B82F6;
+    --primary-dark: #1E40AF;
+    --secondary-color: #0891B2;
+    --secondary-light: #06B6D4;
+    --secondary-dark: #0E7490;
+    --gold-color: #FFD700;
+    --silver-color: #C0C0C0;
+    --platinum-color: #E5E4E2;
+    --palladium-color: #8A8B8C;
+    --light-bg: #F9FAFB;
+    --card-bg: #FFFFFF;
+    --success-color: #16A34A;
+    --warning-color: #FACC15;
+    --error-color: #DC2626;
+    --text-dark: #111827;
+    --text-light: #6B7280;
+    --border-color: #E5E7EB;
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+/* Globalne style */
+html {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+body {
+    background-color: var(--light-bg);
+    color: var(--text-dark);
+}
+
+/* Header i logo */
+.app-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.app-logo {
+    font-size: 2rem;
+    margin-left: 1rem;
+}
+
+.app-title {
+    margin: 0;
+    flex-grow: 1;
+    color: var(--primary-color);
+    font-weight: 700;
+}
+
+.app-subtitle {
+    margin-top: -1rem;
+    margin-bottom: 2rem;
+    color: var(--text-light);
+    font-size: 1.1rem;
+    font-weight: 400;
+}
+
+/* Stylizacja panelu bocznego */
+.sidebar .sidebar-content {
+    background-color: var(--card-bg);
+    border-right: 1px solid var(--border-color);
+    padding: 1rem;
+}
+
+.sidebar h1, .sidebar h2, .sidebar h3 {
+    color: var(--primary-color);
+}
+
+.sidebar .stTabs {
+    background-color: var(--card-bg);
+    border-radius: 8px;
+    box-shadow: var(--shadow-sm);
+    margin-bottom: 1rem;
+}
+
+/* Karty */
+.card {
+    background-color: var(--card-bg);
+    border-radius: 8px;
+    box-shadow: var(--shadow-sm);
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    transition: box-shadow 0.3s ease;
+}
+
+.card:hover {
+    box-shadow: var(--shadow-md);
+}
+
+.card-title {
+    color: var(--primary-color);
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 0.5rem;
+}
+
+/* Metryki */
+.metric-card {
+    background-color: var(--card-bg);
+    border-radius: 8px;
+    padding: 1.25rem;
+    margin: 0.5rem 0;
+    box-shadow: var(--shadow-sm);
+    text-align: center;
+    transition: transform 0.3s ease;
+}
+
+.metric-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.metric-value {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--primary-color);
+}
+
+.metric-label {
+    font-size: 0.9rem;
+    color: var(--text-light);
+    margin-top: 0.25rem;
+}
+
+/* Wykresy */
+.chart-container {
+    background-color: var(--card-bg);
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin: 1rem 0;
+    box-shadow: var(--shadow-sm);
+}
+
+.chart-title {
+    color: var(--primary-color);
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+}
+
+/* Tabele */
+.stDataFrame {
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+}
+
+.stDataFrame th {
+    background-color: var(--primary-light);
+    color: white;
+    font-weight: 600;
+}
+
+.stDataFrame tr:nth-child(even) {
+    background-color: var(--light-bg);
+}
+
+/* Kolorystyka dla metali */
+.gold-color {
+    color: var(--gold-color);
+}
+
+.silver-color {
+    color: var(--silver-color);
+}
+
+.platinum-color {
+    color: var(--platinum-color);
+}
+
+.palladium-color {
+    color: var(--palladium-color);
+}
+
+.gold-bg {
+    background-color: var(--gold-color);
+}
+
+.silver-bg {
+    background-color: var(--silver-color);
+}
+
+.platinum-bg {
+    background-color: var(--platinum-color);
+}
+
+.palladium-bg {
+    background-color: var(--palladium-color);
+}
+
+/* Przyciski */
+.stButton > button {
+    background-color: var(--primary-color);
+    color: white;
+    border-radius: 6px;
+    font-weight: 600;
+    padding: 0.5rem 1rem;
+    transition: background-color 0.3s ease;
+}
+
+.stButton > button:hover {
+    background-color: var(--primary-dark);
+}
+
+.secondary-button {
+    background-color: var(--secondary-color) !important;
+}
+
+.secondary-button:hover {
+    background-color: var(--secondary-dark) !important;
+}
+
+/* Boksy informacyjne */
+.info-box {
+    background-color: #E0F7FA;
+    border-left: 5px solid var(--secondary-color);
+    padding: 1rem;
+    margin: 1rem 0;
+    border-radius: 0 8px 8px 0;
+}
+
+.info-box h3 {
+    color: var(--secondary-dark);
+    margin-top: 0;
+}
+
+.warning-box {
+    background-color: #FFF8E1;
+    border-left: 5px solid var(--warning-color);
+    padding: 1rem;
+    margin: 1rem 0;
+    border-radius: 0 8px 8px 0;
+}
+
+.warning-box h3 {
+    color: #F59E0B;
+    margin-top: 0;
+}
+
+.error-box {
+    background-color: #FEE2E2;
+    border-left: 5px solid var(--error-color);
+    padding: 1rem;
+    margin: 1rem 0;
+    border-radius: 0 8px 8px 0;
+}
+
+.error-box h3 {
+    color: var(--error-color);
+    margin-top: 0;
+}
+
+.success-box {
+    background-color: #DCFCE7;
+    border-left: 5px solid var(--success-color);
+    padding: 1rem;
+    margin: 1rem 0;
+    border-radius: 0 8px 8px 0;
+}
+
+.success-box h3 {
+    color: var(--success-color);
+    margin-top: 0;
+}
+
+/* Slajdery i selectboxy */
+.stSlider > div {
+    margin-top: 0.5rem;
+}
+
+.stSlider > div > div > div {
+    background-color: var(--primary-light);
+}
+
+.stSelectbox > div > div {
+    background-color: var(--card-bg);
+    border-radius: 4px;
+    border: 1px solid var(--border-color);
+}
+
+/* Zakładki */
+.stTabs [data-baseweb="tab-list"] {
+    gap: 1rem;
+}
+
+.stTabs [data-baseweb="tab"] {
+    background-color: transparent;
+    color: var(--text-light);
+    border-radius: 4px 4px 0 0;
+    padding: 0.5rem 1rem;
+    font-weight: 600;
+}
+
+.stTabs [aria-selected="true"] {
+    background-color: var(--primary-light);
+    color: white;
+}
+
+/* Slajdery dla alokacji metali */
+.gold-slider .stSlider > div > div > div {
+    background-color: var(--gold-color);
+}
+
+.silver-slider .stSlider > div > div > div {
+    background-color: var(--silver-color);
+}
+
+.platinum-slider .stSlider > div > div > div {
+    background-color: var(--platinum-color);
+}
+
+.palladium-slider .stSlider > div > div > div {
+    background-color: var(--palladium-color);
+}
+
+/* Stylizacja stopki */
+.footer {
+    text-align: center;
+    color: var(--text-light);
+    font-size: 0.8rem;
+    margin-top: 2rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-color);
+}
+
+/* Responsywność */
+@media (max-width: 768px) {
+    .metric-card {
+        margin-bottom: 1rem;
+    }
+    
+    .app-title {
+        font-size: 1.5rem;
+    }
+    
+    .app-subtitle {
+        font-size: 0.9rem;
+    }
+    
+    .card {
+        padding: 1rem;
+    }
+}
+
+/* Animacje */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.fade-in {
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes slideUp {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+.slide-up {
+    animation: slideUp 0.5s ease-in-out;
+}
+
+/* Niestandardowe komponenty */
+.metal-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    margin-right: 0.5rem;
+    color: white;
+    font-weight: bold;
+}
+
+.metal-icon.gold {
+    background-color: var(--gold-color);
+}
+
+.metal-icon.silver {
+    background-color: var(--silver-color);
+    color: var(--text-dark);
+}
+
+.metal-icon.platinum {
+    background-color: var(--platinum-color);
+    color: var(--text-dark);
+}
+
+.metal-icon.palladium {
+    background-color: var(--palladium-color);
+}
+
+/* Rozszerzenia do funkcji Streamlit */
+.stExpander {
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 1rem;
+}
+
+.stExpander > div[role="button"] {
+    background-color: var(--light-bg);
+}
+
+.stExpander > div[role="button"]:hover {
+    background-color: #F3F4F6;
+}
+
+/* Wyróżnione elementy */
+.highlight {
+    background-color: rgba(59, 130, 246, 0.1);
+    border-radius: 4px;
+    padding: 0.2rem 0.4rem;
+    font-weight: 500;
+}
+
+.highlight.positive {
+    background-color: rgba(22, 163, 74, 0.1);
+    color: var(--success-color);
+}
+
+.highlight.negative {
+    background-color: rgba(220, 38, 38, 0.1);
+    color: var(--error-color);
+}
+
+/* Toast notifications */
+.toast {
+    position: fixed;
+    top: 1rem;
+    right: 1rem;
+    background-color: var(--primary-color);
+    color: white;
+    border-radius: 8px;
+    padding: 1rem;
+    box-shadow: var(--shadow-md);
+    z-index: 1000;
+    opacity: 0;
+    transform: translateY(-20px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.toast.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.toast.success {
+    background-color: var(--success-color);
+}
+
+.toast.error {
+    background-color: var(--error-color);
+}
+
+.toast.warning {
+    background-color: var(--warning-color);
+    color: var(--text-dark);
+}
