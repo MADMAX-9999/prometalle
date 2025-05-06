@@ -164,6 +164,12 @@ def main():
                 format="%.1f"
             )
 
+            cover_method = st.selectbox(
+                translate("cover_method", language=st.session_state.language),
+                options=["cash", "gold", "silver", "platinum", "palladium", "all_metals"],
+                index=0
+            )
+
         run_simulation = st.button(translate("start_simulation", language=st.session_state.language))
 
     if run_simulation:
@@ -207,7 +213,8 @@ def main():
             storage_fee_rate=storage_rate,
             storage_base=storage_base,
             storage_frequency=storage_frequency,
-            vat_rate=vat_rate
+            vat_rate=vat_rate,
+            cover_method=cover_method
         )
 
         st.subheader(translate("portfolio_values", language=st.session_state.language))
