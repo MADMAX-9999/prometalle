@@ -633,11 +633,14 @@ def build_portfolio(
     if schedule.empty or metal_prices.empty:
         return pd.DataFrame()
 
+    # Upewnij się, że dane są posortowane
+    metal_prices = metal_prices.sort_values('Data')
+
     for _, row in schedule.iterrows():
         date = pd.to_datetime(row['Data'])
         amount = row['Kwota']
 
-        # Szukamy ceny na daną datę
+        # Szukamy ceny na datę lub najbliższą wcześniejszą
         daily_prices = metal_prices[metal_prices['Data'] == date]
 
         if daily_prices.empty:
@@ -647,13 +650,13 @@ def build_portfolio(
             daily_prices = metal_prices[metal_prices['Data'] > date].sort_values('Data', ascending=True).head(1)
 
         if daily_prices.empty:
-            continue  # całkowicie pomijamy, jeśli w ogóle brak danych
+            continue  # Brak danych całkowicie, pomijamy
 
         for metal, alloc_percent in allocation.items():
             if alloc_percent > 0:
                 alloc_amount = amount * (alloc_percent / 100)
                 metal_price_col = metal.capitalize()
-                
+
                 if metal_price_col in daily_prices.columns:
                     metal_price = daily_prices[metal_price_col].values[0]
                     price_with_margin = metal_price * (1 + purchase_margin / 100)
@@ -1183,80 +1186,76 @@ def main():
 
     # Panel boczny
     with st.sidebar:
-        st.header(translate("simulation_settings", language=st.session_state.language))
-        
-        # Karty w panelu bocznym
-        tab1, tab2, tab3, tab4 = st.tabs([
-            "⚙️ " + translate("general_settings", language=st.session_state.language),
-            "📊 " + translate("allocation_settings", language=st.session_state.language),
-            "🔄 " + translate("recurring_purchase_settings", language=st.session_state.language),
-            "💼 " + translate("storage_cost_settings", language=st.session_state.language)
-        ])
-        
-        # Karta 1: Ustawienia ogólne
-        with tab1:
-            selected_language_label = st.selectbox(
-                translate("choose_language", language=st.session_state.language),
-                options=[LANGUAGE_LABELS[code] for code in AVAILABLE_LANGUAGES],
-                index=AVAILABLE_LANGUAGES.index(st.session_state.language)
-            )
-            selected_language = [code for code, label in LANGUAGE_LABELS.items() if label == selected_language_label][0]
-            st.session_state.language = selected_language
+    st.header(translate("simulation_settings", language=st.session_state.language))
 
-            selected_currency = st.selectbox(
-                translate("choose_currency", language=st.session_state.language),
-                options=AVAILABLE_CURRENCIES,
-                index=AVAILABLE_CURRENCIES.index(DEFAULT_CURRENCY)
+    selected_section = st.radio(
+        "⚙️ Wybierz sekcję ustawień:",
+        options=["Ustawienia ogólne", "Alokacja kapitału", "Zakupy systematyczne", "Koszty magazynowe"]
+    )
+
+    if selected_section == "Ustawienia ogólne":
+        selected_language_label = st.selectbox(
+            translate("choose_language", language=st.session_state.language),
+            options=[LANGUAGE_LABELS[code] for code in AVAILABLE_LANGUAGES],
+            index=AVAILABLE_LANGUAGES.index(st.session_state.language)
+        )
+        selected_language = [code for code, label in LANGUAGE_LABELS.items() if label == selected_language_label][0]
+        st.session_state.language = selected_language
+
+        selected_currency = st.selectbox(
+            translate("choose_currency", language=st.session_state.language),
+            options=AVAILABLE_CURRENCIES,
+            index=AVAILABLE_CURRENCIES.index(DEFAULT_CURRENCY)
+        )
+
+        selected_unit = st.selectbox(
+            translate("choose_unit", language=st.session_state.language),
+            options=AVAILABLE_UNITS,
+            index=AVAILABLE_UNITS.index(DEFAULT_UNIT),
+            format_func=lambda x: {"g": "Gramy (g)", "oz": "Uncje (oz)"}.get(x, x)
+        )
+
+        start_amount = st.number_input(
+            label=translate("start_amount", language=st.session_state.language),
+            min_value=100.0,
+            value=100000.0,
+            step=100.0,
+            format="%.2f"
+        )
+
+        col1, col2 = st.columns(2)
+        with col1:
+            start_date = st.date_input(
+                label=translate("start_date", language=st.session_state.language),
+                value=min_date,
+                min_value=min_date,
+                max_value=max_date
             )
-            
-            selected_unit = st.selectbox(
-                translate("choose_unit", language=st.session_state.language),
-                options=AVAILABLE_UNITS,
-                index=AVAILABLE_UNITS.index(DEFAULT_UNIT),
-                format_func=lambda x: {"g": "Gramy (g)", "oz": "Uncje (oz)"}.get(x, x)
+        with col2:
+            end_date = st.date_input(
+                label=translate("end_date", language=st.session_state.language),
+                value=max_date,
+                min_value=min_date,
+                max_value=max_date
             )
-            
-            start_amount = st.number_input(
-                label=translate("start_amount", language=st.session_state.language),
-                min_value=100.0,
-                value=100000.0,
-                step=100.0,
-                format="%.2f"
-            )
-            
-            col1, col2 = st.columns(2)
-            with col1:
-                start_date = st.date_input(
-                    label=translate("start_date", language=st.session_state.language),
-                    value=min_date,
-                    min_value=min_date,
-                    max_value=max_date
-                )
-            with col2:
-                end_date = st.date_input(
-                    label=translate("end_date", language=st.session_state.language),
-                    value=max_date,
-                    min_value=min_date,
-                    max_value=max_date
-                )
-            
-            purchase_margin = st.slider(
-                translate("purchase_margin", language=st.session_state.language),
-                min_value=0.0,
-                max_value=5.0,
-                value=2.0,
-                step=0.1,
-                format="%.1f"
-            )
-            
-            sale_margin = st.slider(
-                translate("sale_margin", language=st.session_state.language),
-                min_value=0.0,
-                max_value=5.0,
-                value=1.5,
-                step=0.1,
-                format="%.1f"
-            )
+
+        purchase_margin = st.slider(
+            translate("purchase_margin", language=st.session_state.language),
+            min_value=0.0,
+            max_value=5.0,
+            value=2.0,
+            step=0.1,
+            format="%.1f"
+        )
+
+        sale_margin = st.slider(
+            translate("sale_margin", language=st.session_state.language),
+            min_value=0.0,
+            max_value=5.0,
+            value=1.5,
+            step=0.1,
+            format="%.1f"
+        )
         
         # Karta 2: Alokacja
         with tab2:
