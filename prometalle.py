@@ -1,4 +1,4 @@
-"""
+    """
 Prometalle - Zaawansowany Symulator Inwestycji w Metale Szlachetne
 Aplikacja Streamlit do analiz i symulacji inwestycji w złoto, srebro,
 platynę i pallad na podstawie historycznych danych LBMA.
@@ -641,11 +641,13 @@ def build_portfolio(
         daily_prices = metal_prices[metal_prices['Data'] == date]
 
         if daily_prices.empty:
-            # Jeśli brak cen w dniu zakupu, bierzemy pierwszy następny dostępny dzień
-            daily_prices = metal_prices[metal_prices['Data'] > date].head(1)
-            if daily_prices.empty:
-                # Jeśli nadal brak cen, pomijamy ten zakup
-                continue
+            daily_prices = metal_prices[metal_prices['Data'] < date].sort_values('Data', ascending=False).head(1)
+
+        if daily_prices.empty:
+            daily_prices = metal_prices[metal_prices['Data'] > date].sort_values('Data', ascending=True).head(1)
+
+        if daily_prices.empty:
+            continue  # całkowicie pomijamy, jeśli w ogóle brak danych
 
         for metal, alloc_percent in allocation.items():
             if alloc_percent > 0:
