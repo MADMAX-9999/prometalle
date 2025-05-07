@@ -409,7 +409,7 @@ def load_css():
         background-color: #f5f5f5;
     }
     .stApp {
-        max-width: 1200px;
+ #       max-width: 1200px;
         margin: 0 auto;
     }
     h1, h2, h3 {
