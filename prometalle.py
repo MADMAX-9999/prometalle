@@ -1185,7 +1185,7 @@ def main():
     max_date = metal_prices['Data'].max().date()
 
     # Panel boczny
-	with st.sidebar:
+    with st.sidebar:
     st.header(translate("simulation_settings", language=st.session_state.language))
 
     selected_section = st.radio(
@@ -1257,179 +1257,142 @@ def main():
             format="%.1f"
         )
 
-   
+    elif selected_section == "Alokacja kapitału":
+        st.markdown(f"#### {translate('allocation_settings', language=st.session_state.language)}")
         
-        # Karta 2: Alokacja
-        with tab2:
-            st.markdown(f"#### {translate('allocation_settings', language=st.session_state.language)}")
-            
-            # Wizualne slajdery alokacji z kolorami
-            gold_allocation = st.slider(
-                "🟡 Złoto (%)",
-                0, 100, 40, step=5,
-                help="Procent kapitału przeznaczony na inwestycję w złoto"
-            )
-            
-            silver_allocation = st.slider(
-                "⚪ Srebro (%)",
-                0, 100, 30, step=5,
-                help="Procent kapitału przeznaczony na inwestycję w srebro"
-            )
-            
-            platinum_allocation = st.slider(
-                "⚪ Platyna (%)",
-                0, 100, 15, step=5,
-                help="Procent kapitału przeznaczony na inwestycję w platynę"
-            )
-            
-            palladium_allocation = st.slider(
-                "🔘 Pallad (%)",
-                0, 100, 15, step=5,
-                help="Procent kapitału przeznaczony na inwestycję w pallad"
-            )
-            
-            allocation_sum = gold_allocation + silver_allocation + platinum_allocation + palladium_allocation
-            
-            if allocation_sum == 100:
-                st.success(f"{translate('total_allocation', language=st.session_state.language)}: {allocation_sum}%")
-            else:
-                st.warning(f"{translate('allocation_error', language=st.session_state.language)} ({allocation_sum}%)")
-            
-            # Podgląd alokacji w formie wykresu kołowego
-            if allocation_sum > 0:
-                alloc_data = {
-                    'Metal': ['Złoto', 'Srebro', 'Platyna', 'Pallad'],
-                    'Alokacja (%)': [gold_allocation, silver_allocation, platinum_allocation, palladium_allocation],
-                    'Kolor': ['gold', 'silver', '#e5e4e2', '#8c8c9c']
-                }
-                alloc_df = pd.DataFrame(alloc_data)
-                alloc_df = alloc_df[alloc_df['Alokacja (%)'] > 0]  # Filtrowanie wartości > 0
-                
-                fig = px.pie(
-                    alloc_df, 
-                    values='Alokacja (%)', 
-                    names='Metal', 
-                    color='Metal',
-                    color_discrete_map={
-                        'Złoto': 'gold',
-                        'Srebro': 'silver',
-                        'Platyna': '#e5e4e2',
-                        'Pallad': '#8c8c9c'
-                    },
-                    hole=0.4
-                )
-                fig.update_layout(
-                    margin=dict(t=0, b=0, l=0, r=0),
-                    height=200,
-                    showlegend=False
-                )
-                fig.update_traces(textinfo='percent+label')
-                st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
-        
-        # Karta 3: Zakupy systematyczne
-        with tab3:
-            frequency = st.selectbox(
-                label=translate("frequency", language=st.session_state.language),
-                options=["one_time", "weekly", "monthly", "quarterly"],
-                index=0,
-                format_func=lambda x: {
-                    "one_time": translate("one_time", language=st.session_state.language),
-                    "weekly": translate("weekly", language=st.session_state.language),
-                    "monthly": translate("monthly", language=st.session_state.language),
-                    "quarterly": translate("quarterly", language=st.session_state.language)
-                }.get(x, x)
-            )
-            
-            recurring_amount = 0.0
-            purchase_day = 0
-            
-            if frequency != "one_time":
-                recurring_amount = st.number_input(
-                    label=translate("recurring_amount", language=st.session_state.language),
-                    min_value=0.0,
-                    value=250.0,
-                    step=50.0,
-                    format="%.2f"
-                )
-                
-                if frequency == "weekly":
-                    purchase_day = st.selectbox(
-                        translate("purchase_day_weekly", language=st.session_state.language),
-                        options=list(range(0, 5)),
-                        index=0,
-                        format_func=lambda x: {
-                            0: "Poniedziałek",
-                            1: "Wtorek",
-                            2: "Środa",
-                            3: "Czwartek",
-                            4: "Piątek"
-                        }.get(x, x)
-                    )
-                elif frequency == "monthly":
-                    purchase_day = st.selectbox(
-                        translate("purchase_day_monthly", language=st.session_state.language),
-                        options=list(range(1, 29)),
-                        index=0
-                    )
-                elif frequency == "quarterly":
-                    purchase_day = st.selectbox(
-                        translate("purchase_day_quarterly", language=st.session_state.language),
-                        options=list(range(1, 91)),
-                        index=0
-                    )
-        
-        # Karta 4: Koszty magazynowe
-        with tab4:
-            storage_base = st.selectbox(
-                translate("storage_base", language=st.session_state.language),
-                options=["value", "invested_amount"],
-                index=0,
-                format_func=lambda x: {
-                    "value": "Wartość metali",
-                    "invested_amount": "Zainwestowana kwota"
-                }.get(x, x)
-            )
-            
-            storage_frequency = st.selectbox(
-                translate("storage_frequency", language=st.session_state.language),
-                options=["monthly", "yearly"],
-                index=0,
-                format_func=lambda x: {
-                    "monthly": "Miesięczna",
-                    "yearly": "Roczna"
-                }.get(x, x)
-            )
-            
-            storage_rate = st.number_input(
-                translate("storage_rate", language=st.session_state.language),
+        gold_allocation = st.slider(
+            "🟡 Złoto (%)",
+            0, 100, 40, step=5,
+            help="Procent kapitału przeznaczony na inwestycję w złoto"
+        )
+
+        silver_allocation = st.slider(
+            "⚪ Srebro (%)",
+            0, 100, 30, step=5,
+            help="Procent kapitału przeznaczony na inwestycję w srebro"
+        )
+
+        platinum_allocation = st.slider(
+            "⚪ Platyna (%)",
+            0, 100, 15, step=5,
+            help="Procent kapitału przeznaczony na inwestycję w platynę"
+        )
+
+        palladium_allocation = st.slider(
+            "🔘 Pallad (%)",
+            0, 100, 15, step=5,
+            help="Procent kapitału przeznaczony na inwestycję w pallad"
+        )
+
+        allocation_sum = gold_allocation + silver_allocation + platinum_allocation + palladium_allocation
+
+        if allocation_sum == 100:
+            st.success(f"{translate('total_allocation', language=st.session_state.language)}: {allocation_sum}%")
+        else:
+            st.warning(f"{translate('allocation_error', language=st.session_state.language)} ({allocation_sum}%)")
+
+    elif selected_section == "Zakupy systematyczne":
+        frequency = st.selectbox(
+            label=translate("frequency", language=st.session_state.language),
+            options=["one_time", "weekly", "monthly", "quarterly"],
+            index=0,
+            format_func=lambda x: {
+                "one_time": translate("one_time", language=st.session_state.language),
+                "weekly": translate("weekly", language=st.session_state.language),
+                "monthly": translate("monthly", language=st.session_state.language),
+                "quarterly": translate("quarterly", language=st.session_state.language)
+            }.get(x, x)
+        )
+
+        recurring_amount = 0.0
+        purchase_day = 0
+
+        if frequency != "one_time":
+            recurring_amount = st.number_input(
+                label=translate("recurring_amount", language=st.session_state.language),
                 min_value=0.0,
-                value=0.05,
-                step=0.01,
-                format="%.2f",
-                help="Roczna stawka opłaty magazynowej jako procent"
+                value=250.0,
+                step=50.0,
+                format="%.2f"
             )
-            
-            vat_rate = st.number_input(
-                translate("vat_rate", language=st.session_state.language),
-                min_value=0.0,
-                value=19.0,
-                step=1.0,
-                format="%.1f"
-            )
-            
-            cover_method = st.selectbox(
-                translate("cover_method", language=st.session_state.language),
-                options=["cash", "gold", "silver", "platinum", "palladium", "all_metals"],
-                index=0,
-                format_func=lambda x: {
-                    "cash": translate("cash", language=st.session_state.language),
-                    "gold": translate("gold", language=st.session_state.language),
-                    "silver": translate("silver", language=st.session_state.language),
-                    "platinum": translate("platinum", language=st.session_state.language),
-                    "palladium": translate("palladium", language=st.session_state.language),
-                    "all_metals": translate("all_metals", language=st.session_state.language)
-                }.get(x, x)
-            )
+
+            if frequency == "weekly":
+                purchase_day = st.selectbox(
+                    translate("purchase_day_weekly", language=st.session_state.language),
+                    options=list(range(0, 5)),
+                    index=0,
+                    format_func=lambda x: {
+                        0: "Poniedziałek",
+                        1: "Wtorek",
+                        2: "Środa",
+                        3: "Czwartek",
+                        4: "Piątek"
+                    }.get(x, x)
+                )
+            elif frequency == "monthly":
+                purchase_day = st.selectbox(
+                    translate("purchase_day_monthly", language=st.session_state.language),
+                    options=list(range(1, 29)),
+                    index=0
+                )
+            elif frequency == "quarterly":
+                purchase_day = st.selectbox(
+                    translate("purchase_day_quarterly", language=st.session_state.language),
+                    options=list(range(1, 91)),
+                    index=0
+                )
+
+    elif selected_section == "Koszty magazynowe":
+        storage_base = st.selectbox(
+            translate("storage_base", language=st.session_state.language),
+            options=["value", "invested_amount"],
+            index=0,
+            format_func=lambda x: {
+                "value": "Wartość metali",
+                "invested_amount": "Zainwestowana kwota"
+            }.get(x, x)
+        )
+
+        storage_frequency = st.selectbox(
+            translate("storage_frequency", language=st.session_state.language),
+            options=["monthly", "yearly"],
+            index=0,
+            format_func=lambda x: {
+                "monthly": "Miesięczna",
+                "yearly": "Roczna"
+            }.get(x, x)
+        )
+
+        storage_rate = st.number_input(
+            translate("storage_rate", language=st.session_state.language),
+            min_value=0.0,
+            value=0.05,
+            step=0.01,
+            format="%.2f",
+            help="Roczna stawka opłaty magazynowej jako procent"
+        )
+
+        vat_rate = st.number_input(
+            translate("vat_rate", language=st.session_state.language),
+            min_value=0.0,
+            value=19.0,
+            step=1.0,
+            format="%.1f"
+        )
+
+        cover_method = st.selectbox(
+            translate("cover_method", language=st.session_state.language),
+            options=["cash", "gold", "silver", "platinum", "palladium", "all_metals"],
+            index=0,
+            format_func=lambda x: {
+                "cash": translate("cash", language=st.session_state.language),
+                "gold": translate("gold", language=st.session_state.language),
+                "silver": translate("silver", language=st.session_state.language),
+                "platinum": translate("platinum", language=st.session_state.language),
+                "palladium": translate("palladium", language=st.session_state.language),
+                "all_metals": translate("all_metals", language=st.session_state.language)
+            }.get(x, x)
+        )
         
         # Przycisk uruchomienia symulacji
         st.markdown("---")
