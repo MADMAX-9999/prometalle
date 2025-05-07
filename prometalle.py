@@ -401,6 +401,18 @@ def translate(key: str, language: str = DEFAULT_LANGUAGE) -> str:
 # FUNKCJE POMOCNICZE
 #############################################################################
 
+import streamlit as st
+import pandas as pd
+import base64
+from io import BytesIO
+
+# Domyślne inflacje
+DEFAULT_INFLATION = {
+    'PLN': 0.06,
+    'EUR': 0.02,
+    'USD': 0.025
+}
+
 def load_css():
     """Ładuje niestandardowy CSS."""
     st.markdown("""
@@ -409,7 +421,7 @@ def load_css():
         background-color: #f5f5f5;
     }
     .stApp {
- #       max-width: 1200px;
+        max-width: 1200px;
         margin: 0 auto;
     }
     h1, h2, h3 {
