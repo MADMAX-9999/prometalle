@@ -1185,7 +1185,7 @@ def main():
     max_date = metal_prices['Data'].max().date()
 
     # Panel boczny
-    with st.sidebar:
+	with st.sidebar:
     st.header(translate("simulation_settings", language=st.session_state.language))
 
     selected_section = st.radio(
@@ -1256,6 +1256,8 @@ def main():
             step=0.1,
             format="%.1f"
         )
+
+   
         
         # Karta 2: Alokacja
         with tab2:
