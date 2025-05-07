@@ -396,6 +396,7 @@ def translate(key: str, language: str = DEFAULT_LANGUAGE) -> str:
             return TRANSLATIONS[key]['en']
     return key
 
+
 #############################################################################
 # FUNKCJE POMOCNICZE
 #############################################################################
@@ -535,6 +536,8 @@ def get_inflation_rate(df_inflation: pd.DataFrame, year: int, currency: str) -> 
             return DEFAULT_INFLATION.get(currency, 0.02)
     except:
         return DEFAULT_INFLATION.get(currency, 0.02)
+
+
 
 #############################################################################
 # FUNKCJE OBSŁUGI METALI I KURSÓW WALUT
