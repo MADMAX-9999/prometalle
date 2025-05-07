@@ -1,4 +1,749 @@
-elif cover_method in ["gold", "silver", "platinum", "palladium"]:
+Prometalle - Zaawansowany Symulator Inwestycji w Metale Szlachetne
+
+Aplikacja Streamlit do analiz i symulacji inwestycji w złoto, srebro,
+platynę i pallad na podstawie historycznych danych LBMA.
+"""
+
+import streamlit as st
+import pandas as pd
+import numpy as np
+import plotly.graph_objects as go
+import plotly.express as px
+import matplotlib.pyplot as plt
+from datetime import datetime, timedelta
+from typing import Dict, List, Tuple, Optional, Union, Any
+import os
+import base64
+from io import BytesIO
+
+#############################################################################
+# KONFIGURACJA
+#############################################################################
+
+# Ustawienia domyślne
+DEFAULT_LANGUAGE = 'pl'      # Domyślny język: polski
+DEFAULT_CURRENCY = 'EUR'     # Domyślna waluta: Euro
+DEFAULT_UNIT = 'g'           # Domyślna jednostka: gramy
+
+# Dostępne opcje
+AVAILABLE_LANGUAGES = ['pl', 'en', 'de']
+AVAILABLE_CURRENCIES = ['PLN', 'EUR', 'USD']
+AVAILABLE_UNITS = ['g', 'oz']
+
+# Etykiety językowe
+LANGUAGE_LABELS = {
+    "pl": "Polski",
+    "en": "English",
+    "de": "Deutsch"
+}
+
+# Roczne inflacje domyślne (jeśli brak danych w CSV)
+DEFAULT_INFLATION = {
+    'PLN': 0.06,    # 6% rocznie
+    'EUR': 0.02,    # 2% rocznie
+    'USD': 0.025    # 2,5% rocznie
+}
+
+# Przeliczniki jednostek
+UNITS_CONVERSION = {
+    'g_to_oz': 0.03215,      # gramy na uncje
+    'oz_to_g': 31.1035       # uncje na gramy
+}
+
+# Kolory metali do wykresów
+METAL_COLORS = {
+    'Gold': '#FFD700',      # Złoto
+    'Silver': '#C0C0C0',    # Srebro
+    'Platinum': '#E5E4E2',  # Platyna
+    'Palladium': '#8A8B8C'  # Pallad
+}
+
+# Historyczne wydarzenia na wykresach
+HISTORICAL_EVENTS = {
+    '2008-09-15': 'Upadek Lehman Brothers',
+    '2011-08-22': 'Szczyt ceny złota',
+    '2020-03-23': 'Krach COVID-19',
+    '2022-02-24': 'Inwazja Rosji na Ukrainę'
+}
+
+#############################################################################
+# TŁUMACZENIA
+#############################################################################
+
+# Słownik tłumaczeń
+TRANSLATIONS = {
+    # Ogólne ustawienia
+    "choose_language": {
+        "pl": "Wybierz język",
+        "en": "Choose language",
+        "de": "Sprache wählen"
+    },
+    "choose_currency": {
+        "pl": "Wybierz walutę",
+        "en": "Choose currency",
+        "de": "Währung wählen"
+    },
+    "choose_unit": {
+        "pl": "Wybierz jednostkę wagi",
+        "en": "Choose weight unit",
+        "de": "Gewichtseinheit wählen"
+    },
+    
+    # Sekcje konfiguracji
+    "general_settings": {
+        "pl": "Ustawienia ogólne",
+        "en": "General settings",
+        "de": "Allgemeine Einstellungen"
+    },
+    "simulation_settings": {
+        "pl": "Ustawienia symulacji",
+        "en": "Simulation settings",
+        "de": "Simulationseinstellungen"
+    },
+    "allocation_settings": {
+        "pl": "Ustawienia alokacji kapitału",
+        "en": "Capital allocation settings",
+        "de": "Kapitalallokationseinstellungen"
+    },
+    
+    # Kwoty inwestycji
+    "start_amount": {
+        "pl": "Kwota początkowa inwestycji",
+        "en": "Initial investment amount",
+        "de": "Anfangsinvestition"
+    },
+    "recurring_amount": {
+        "pl": "Kwota zakupu systematycznego",
+        "en": "Recurring purchase amount",
+        "de": "Regelmäßiger Kaufbetrag"
+    },
+    
+    # Częstotliwości zakupów
+    "frequency": {
+        "pl": "Częstotliwość zakupów",
+        "en": "Purchase frequency",
+        "de": "Kaufhäufigkeit"
+    },
+    "purchase_day_weekly": {
+        "pl": "Dzień tygodnia zakupu (0=Poniedziałek, ..., 4=Piątek)",
+        "en": "Day of the week to purchase (0=Monday, ..., 4=Friday)",
+        "de": "Wochentag des Kaufs (0=Montag, ..., 4=Freitag)"
+    },
+    "purchase_day_monthly": {
+        "pl": "Dzień miesiąca zakupu (1-28)",
+        "en": "Day of the month to purchase (1-28)",
+        "de": "Kauftag des Monats (1-28)"
+    },
+    "purchase_day_quarterly": {
+        "pl": "Dzień kwartału zakupu (1-90)",
+        "en": "Day of the quarter to purchase (1-90)",
+        "de": "Kauftag des Quartals (1-90)"
+    },
+    
+    # Daty
+    "start_date": {
+        "pl": "Data rozpoczęcia inwestycji",
+        "en": "Investment start date",
+        "de": "Anfangsdatum der Investition"
+    },
+    "end_date": {
+        "pl": "Data zakończenia inwestycji",
+        "en": "Investment end date",
+        "de": "Enddatum der Investition"
+    },
+    
+    # Alokacja
+    "total_allocation": {
+        "pl": "Łączna alokacja",
+        "en": "Total allocation",
+        "de": "Gesamtallokation"
+    },
+    "allocation_error": {
+        "pl": "⚠️ Łączna alokacja musi wynosić 100%!",
+        "en": "⚠️ Total allocation must be 100%!",
+        "de": "⚠️ Die Gesamtallokation muss 100% betragen!"
+    },
+    
+    # Zakupy systematyczne
+    "recurring_purchase_settings": {
+        "pl": "Ustawienia zakupów systematycznych",
+        "en": "Recurring purchase settings",
+        "de": "Einstellungen für regelmäßige Käufe"
+    },
+    "one_time": {
+        "pl": "Jednorazowy",
+        "en": "One-time",
+        "de": "Einmalig"
+    },
+    "weekly": {
+        "pl": "Co tydzień",
+        "en": "Weekly",
+        "de": "Wöchentlich"
+    },
+    "monthly": {
+        "pl": "Co miesiąc",
+        "en": "Monthly",
+        "de": "Monatlich"
+    },
+    "quarterly": {
+        "pl": "Co kwartał",
+        "en": "Quarterly",
+        "de": "Vierteljährlich"
+    },
+    
+    # Koszty magazynowe
+    "storage_cost_settings": {
+        "pl": "Koszty magazynowe",
+        "en": "Storage cost settings",
+        "de": "Lagerkosteneinstellungen"
+    },
+    "storage_base": {
+        "pl": "Podstawa naliczania kosztu",
+        "en": "Storage cost base",
+        "de": "Berechnungsgrundlage Lagerkosten"
+    },
+    "storage_frequency": {
+        "pl": "Częstotliwość naliczania",
+        "en": "Storage frequency",
+        "de": "Häufigkeit der Lagerkosten"
+    },
+    "storage_rate": {
+        "pl": "Stawka magazynowania (%)",
+        "en": "Storage rate (%)",
+        "de": "Lagerkostensatz (%)"
+    },
+    "vat_rate": {
+        "pl": "Stawka VAT (%)",
+        "en": "VAT rate (%)",
+        "de": "Mehrwertsteuersatz (%)"
+    },
+    "cover_method": {
+        "pl": "Pokrycie kosztów magazynowych",
+        "en": "Storage cost coverage",
+        "de": "Deckung der Lagerkosten"
+    },
+    
+    # Sposoby pokrycia kosztów
+    "cash": {
+        "pl": "Gotówka",
+        "en": "Cash",
+        "de": "Bargeld"
+    },
+    "gold": {
+        "pl": "Złoto",
+        "en": "Gold",
+        "de": "Gold"
+    },
+    "silver": {
+        "pl": "Srebro",
+        "en": "Silver",
+        "de": "Silber"
+    },
+    "platinum": {
+        "pl": "Platyna",
+        "en": "Platinum",
+        "de": "Platin"
+    },
+    "palladium": {
+        "pl": "Pallad",
+        "en": "Palladium",
+        "de": "Palladium"
+    },
+    "all_metals": {
+        "pl": "Wszystkie metale",
+        "en": "All metals",
+        "de": "Alle Metalle"
+    },
+    
+    # Marże
+    "margin_settings": {
+        "pl": "Marże i koszty transakcyjne",
+        "en": "Margins and Transaction Costs",
+        "de": "Margen und Transaktionskosten"
+    },
+    "purchase_margin": {
+        "pl": "Marża przy zakupie (%)",
+        "en": "Purchase Margin (%)",
+        "de": "Kaufmarge (%)"
+    },
+    "sale_margin": {
+        "pl": "Marża przy sprzedaży (%)",
+        "en": "Sale Margin (%)",
+        "de": "Verkaufsmarge (%)"
+    },
+    
+    # Przyciski akcji
+    "start_simulation": {
+        "pl": "Rozpocznij symulację",
+        "en": "Start simulation",
+        "de": "Simulation starten"
+    },
+    "reset_simulation": {
+        "pl": "Resetuj symulację",
+        "en": "Reset simulation",
+        "de": "Simulation zurücksetzen"
+    },
+    "export_data": {
+        "pl": "Eksportuj dane",
+        "en": "Export data",
+        "de": "Daten exportieren"
+    },
+    
+    # Wyniki symulacji
+    "transaction_register": {
+        "pl": "Rejestr operacji",
+        "en": "Transaction Register",
+        "de": "Transaktionsregister"
+    },
+    "portfolio_summary": {
+        "pl": "Podsumowanie portfela",
+        "en": "Portfolio summary",
+        "de": "Portfoliozusammenfassung"
+    },
+    "storage_costs": {
+        "pl": "Łączne koszty magazynowania",
+        "en": "Total storage costs",
+        "de": "Gesamte Lagerkosten"
+    },
+    "portfolio_chart": {
+        "pl": "Wykres wartości portfela",
+        "en": "Portfolio value chart",
+        "de": "Wertdiagramm des Portfolios"
+    },
+    "purchase_schedule": {
+        "pl": "Harmonogram zakupów",
+        "en": "Purchase schedule",
+        "de": "Kaufplan"
+    },
+    
+    # Metryki portfela
+    "portfolio_value": {
+        "pl": "Wartość portfela",
+        "en": "Portfolio value",
+        "de": "Portfoliowert"
+    },
+    "invested_amount": {
+        "pl": "Zainwestowana kwota",
+        "en": "Invested amount",
+        "de": "Investierter Betrag"
+    },
+    "return_on_investment": {
+        "pl": "Stopa zwrotu",
+        "en": "Return on investment",
+        "de": "Anlagerendite"
+    },
+    
+    # Komunikaty o błędach
+    "error_loading_data": {
+        "pl": "Błąd ładowania danych",
+        "en": "Error loading data",
+        "de": "Fehler beim Laden der Daten"
+    },
+    "no_data_to_display": {
+        "pl": "Brak danych do wyświetlenia",
+        "en": "No data to display",
+        "de": "Keine Daten zum Anzeigen"
+    },
+    
+    # Zakładki wyników
+    "visualizations_tab": {
+        "pl": "Wizualizacje",
+        "en": "Visualizations",
+        "de": "Visualisierungen"
+    },
+    "transaction_register_tab": {
+        "pl": "Rejestr operacji",
+        "en": "Transaction Register",
+        "de": "Transaktionsregister"
+    },
+    "portfolio_summary_tab": {
+        "pl": "Podsumowanie portfela",
+        "en": "Portfolio Summary",
+        "de": "Portfolioübersicht"
+    },
+    "purchase_schedule_tab": {
+        "pl": "Harmonogram zakupów",
+        "en": "Purchase Schedule",
+        "de": "Kaufplan"
+    },
+    
+    # Strona startowa
+    "welcome_message": {
+        "pl": "Witaj w Prometalle",
+        "en": "Welcome to Prometalle",
+        "de": "Willkommen bei Prometalle"
+    },
+    "app_description": {
+        "pl": "Inteligentny symulator inwestycji w metale szlachetne",
+        "en": "Intelligent precious metals investment simulator",
+        "de": "Intelligenter Simulator für Investitionen in Edelmetalle"
+    },
+    
+    # Stopka
+    "footer_disclaimer": {
+        "pl": "Prometalle - Symulator inwestycji w metale szlachetne. Symulacja nie stanowi porady inwestycyjnej.",
+        "en": "Prometalle - Precious metals investment simulator. Simulation does not constitute investment advice.",
+        "de": "Prometalle - Simulator für Investitionen in Edelmetalle. Die Simulation stellt keine Anlageberatung dar."
+    }
+}
+
+def translate(key: str, language: str = DEFAULT_LANGUAGE) -> str:
+    """Zwraca tłumaczenie danego klucza w wybranym języku."""
+    if key in TRANSLATIONS:
+        if language in TRANSLATIONS[key]:
+            return TRANSLATIONS[key][language]
+        elif 'en' in TRANSLATIONS[key]:
+            return TRANSLATIONS[key]['en']
+    return key
+
+#############################################################################
+# FUNKCJE POMOCNICZE
+#############################################################################
+
+def load_css():
+    """Ładuje niestandardowy CSS."""
+    st.markdown("""
+    <style>
+    .main {
+        background-color: #f5f5f5;
+    }
+    .stApp {
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+    h1, h2, h3 {
+        color: #1E3A8A;
+    }
+    .sidebar .sidebar-content {
+        background-color: #f0f9ff;
+    }
+    .st-bw {
+        background-color: #ffffff;
+        border-radius: 5px;
+        padding: 1rem;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    }
+    .info-box {
+        background-color: #e0f7fa;
+        border-left: 5px solid #0097a7;
+        padding: 1rem;
+        margin: 1rem 0;
+        border-radius: 0 5px 5px 0;
+    }
+    .warning-box {
+        background-color: #fff8e1;
+        border-left: 5px solid #ffa000;
+        padding: 1rem;
+        margin: 1rem 0;
+        border-radius: 0 5px 5px 0;
+    }
+    .metric-card {
+        background-color: white;
+        border-radius: 5px;
+        padding: 1rem;
+        margin: 0.5rem 0;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+        text-align: center;
+    }
+    .metric-value {
+        font-size: 1.8rem;
+        font-weight: bold;
+        color: #1E3A8A;
+    }
+    .metric-label {
+        font-size: 0.9rem;
+        color: #64748b;
+    }
+    .chart-container {
+        background-color: white;
+        border-radius: 5px;
+        padding: 1rem;
+        margin: 1rem 0;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+    }
+    .gold-color { color: #FFD700; }
+    .silver-color { color: #C0C0C0; }
+    .platinum-color { color: #E5E4E2; }
+    .palladium-color { color: #8A8B8C; }
+    </style>
+    """, unsafe_allow_html=True)
+
+def convert_df_to_csv_download_link(df, filename="data.csv"):
+    """Generuje link do pobrania DataFrame jako CSV."""
+    csv = df.to_csv(index=False)
+    b64 = base64.b64encode(csv.encode()).decode()
+    href = f'<a href="data:file/csv;base64,{b64}" download="{filename}">Pobierz plik CSV</a>'
+    return href
+
+def create_excel_download_link(data_dict, filename="data.xlsx"):
+    """Generuje link do pobrania słownika DataFrame jako Excel."""
+    output = BytesIO()
+    with pd.ExcelWriter(output, engine='openpyxl') as writer:
+        for sheet_name, df in data_dict.items():
+            df.to_excel(writer, sheet_name=sheet_name, index=False)
+    excel_data = output.getvalue()
+    b64 = base64.b64encode(excel_data).decode()
+    href = f'<a href="data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,{b64}" download="{filename}">Pobierz plik Excel</a>'
+    return href
+
+@st.cache_data
+def load_metal_prices(file_path: str) -> pd.DataFrame:
+    """Ładuje ceny metali z pliku CSV."""
+    try:
+        prices = pd.read_csv(file_path, parse_dates=["Data"])
+        prices.sort_values("Data", inplace=True)
+        return prices
+    except Exception as e:
+        st.error(f"Błąd podczas ładowania cen metali: {e}")
+        return pd.DataFrame()
+
+@st.cache_data
+def load_exchange_rates(file_path: str) -> pd.DataFrame:
+    """Ładuje kursy walutowe z pliku CSV."""
+    try:
+        rates = pd.read_csv(file_path, parse_dates=["Data"])
+        rates.sort_values("Data", inplace=True)
+        return rates
+    except Exception as e:
+        st.error(f"Błąd podczas ładowania kursów walut: {e}")
+        return pd.DataFrame()
+
+@st.cache_data
+def load_inflation_rates(file_path: str) -> pd.DataFrame:
+    """Ładuje dane o inflacji z pliku CSV."""
+    try:
+        df = pd.read_csv(file_path)
+        if {'Rok', 'waluta', 'roczna_inflacja'}.issubset(df.columns):
+            return df
+        else:
+            raise ValueError("Brak wymaganych kolumn w pliku CSV.")
+    except Exception as e:
+        # Zwróć domyślne inflacje w prostym DataFrame
+        data = []
+        for year in range(1997, 2030):
+            for currency, rate in DEFAULT_INFLATION.items():
+                data.append({'Rok': year, 'waluta': currency, 'roczna_inflacja': rate})
+        return pd.DataFrame(data)
+
+def get_inflation_rate(df_inflation: pd.DataFrame, year: int, currency: str) -> float:
+    """Zwraca roczną inflację dla podanego roku i waluty."""
+    try:
+        rate = df_inflation[(df_inflation['Rok'] == year) & (df_inflation['waluta'] == currency)]['roczna_inflacja'].values
+        if len(rate) > 0:
+            return float(rate[0])
+        else:
+            return DEFAULT_INFLATION.get(currency, 0.02)
+    except:
+        return DEFAULT_INFLATION.get(currency, 0.02)
+
+#############################################################################
+# FUNKCJE OBSŁUGI METALI I KURSÓW WALUT
+#############################################################################
+
+def convert_prices_to_currency(prices_df: pd.DataFrame, rates_df: pd.DataFrame, currency: str) -> pd.DataFrame:
+    """Konwertuje ceny metali na wybraną walutę (EUR, USD, PLN)."""
+    if prices_df.empty or rates_df.empty:
+        return pd.DataFrame()
+        
+    merged = pd.merge(prices_df, rates_df, on="Data", how="left")
+
+    if currency == "EUR":
+        return merged
+    elif currency == "USD":
+        merged["Gold"] = merged["Gold"] * merged["EUR_USD"]
+        merged["Silver"] = merged["Silver"] * merged["EUR_USD"]
+        merged["Platinum"] = merged["Platinum"] * merged["EUR_USD"]
+        merged["Palladium"] = merged["Palladium"] * merged["EUR_USD"]
+    elif currency == "PLN":
+        merged["Gold"] = merged["Gold"] * merged["EUR_PLN"]
+        merged["Silver"] = merged["Silver"] * merged["EUR_PLN"]
+        merged["Platinum"] = merged["Platinum"] * merged["EUR_PLN"]
+        merged["Palladium"] = merged["Palladium"] * merged["EUR_PLN"]
+    else:
+        raise ValueError(f"Unsupported currency: {currency}")
+
+    return merged
+
+#############################################################################
+# FUNKCJE HARMONOGRAMU ZAKUPÓW
+#############################################################################
+
+def generate_purchase_schedule(
+    start_date: str,
+    end_date: str,
+    frequency: str,
+    purchase_day: int,
+    purchase_amount: float
+) -> pd.DataFrame:
+    """Generuje harmonogram zakupów na podstawie częstotliwości."""
+    schedule = []
+    
+    start = pd.to_datetime(start_date)
+    end = pd.to_datetime(end_date)
+    
+    if frequency == 'weekly':
+        # Co tydzień w określony dzień tygodnia
+        current = start
+        while current <= end:
+            if current.weekday() == purchase_day:
+                schedule.append({'Data': current, 'Kwota': purchase_amount})
+            current += timedelta(days=1)
+
+    elif frequency == 'monthly':
+        # Co miesiąc w określony dzień
+        current = start.replace(day=1)
+        while current <= end:
+            try:
+                purchase_date = current.replace(day=purchase_day)
+            except ValueError:
+                # Dzień nie istnieje (np. 30 lutego) -> ostatni dzień miesiąca
+                next_month = current + pd.DateOffset(months=1)
+                purchase_date = next_month - pd.DateOffset(days=1)
+            if purchase_date >= start and purchase_date <= end:
+                schedule.append({'Data': purchase_date, 'Kwota': purchase_amount})
+            current += pd.DateOffset(months=1)
+
+    elif frequency == 'quarterly':
+        # Co kwartał w określony dzień
+        current = start.replace(day=1)
+        while current <= end:
+            try:
+                purchase_date = current.replace(day=purchase_day)
+            except ValueError:
+                next_month = current + pd.DateOffset(months=1)
+                purchase_date = next_month - pd.DateOffset(days=1)
+            if purchase_date >= start and purchase_date <= end:
+                schedule.append({'Data': purchase_date, 'Kwota': purchase_amount})
+            current += pd.DateOffset(months=3)
+
+    return pd.DataFrame(schedule)
+
+#############################################################################
+# FUNKCJE OBSŁUGI PORTFELA
+#############################################################################
+
+def build_portfolio(
+    schedule: pd.DataFrame,
+    metal_prices: pd.DataFrame,
+    allocation: dict,
+    purchase_margin: float = 2.0
+) -> pd.DataFrame:
+    """Buduje rejestr operacji zakupowych na podstawie harmonogramu i alokacji."""
+    portfolio_records = []
+
+    if schedule.empty or metal_prices.empty:
+        return pd.DataFrame()
+
+    for _, row in schedule.iterrows():
+        date = pd.to_datetime(row['Data'])
+        amount = row['Kwota']
+
+        # Szukamy ceny na daną datę
+        daily_prices = metal_prices[metal_prices['Data'] == date]
+
+        if daily_prices.empty:
+            # Jeśli brak cen w dniu zakupu, bierzemy pierwszy następny dostępny dzień
+            daily_prices = metal_prices[metal_prices['Data'] > date].head(1)
+            if daily_prices.empty:
+                # Jeśli nadal brak cen, pomijamy ten zakup
+                continue
+
+        for metal, alloc_percent in allocation.items():
+            if alloc_percent > 0:
+                alloc_amount = amount * (alloc_percent / 100)
+                metal_price_col = metal.capitalize()
+                
+                if metal_price_col in daily_prices.columns:
+                    metal_price = daily_prices[metal_price_col].values[0]
+                    price_with_margin = metal_price * (1 + purchase_margin / 100)
+                    quantity = alloc_amount / price_with_margin
+
+                    portfolio_records.append({
+                        'Data': date,
+                        'Typ operacji': 'Zakup',
+                        'Metal': metal.capitalize(),
+                        'Ilość': quantity,
+                        'Cena jednostkowa': price_with_margin,
+                        'Kwota operacji': alloc_amount,
+                        'Koszt_magazynowania': 0.0,
+                        'Kwota_po_kosztach': alloc_amount
+                    })
+
+    portfolio_df = pd.DataFrame(portfolio_records)
+    return portfolio_df
+
+def aggregate_portfolio(df_portfolio: pd.DataFrame) -> pd.DataFrame:
+    """Agreguje wartości końcowe portfela."""
+    if df_portfolio.empty:
+        return pd.DataFrame()
+
+    current_portfolio = df_portfolio.copy()
+    metals_summary = current_portfolio.groupby('Metal').agg({
+        'Ilość': 'sum',
+        'Kwota operacji': 'sum',
+        'Cena jednostkowa': 'last'  # Ostatnia cena
+    }).reset_index()
+    
+    # Dodajemy kolumnę z aktualną wartością
+    metals_summary['Wartość aktualna'] = metals_summary['Ilość'] * metals_summary['Cena jednostkowa']
+    
+    # Obliczamy zysk/stratę
+    metals_summary['Zysk/Strata'] = metals_summary['Wartość aktualna'] - metals_summary['Kwota operacji']
+    
+    # Obliczamy ROI
+    metals_summary['ROI (%)'] = (metals_summary['Zysk/Strata'] / metals_summary['Kwota operacji'] * 100)
+    metals_summary['ROI (%)'] = metals_summary['ROI (%)'].replace([np.inf, -np.inf], 0)
+    metals_summary['ROI (%)'] = metals_summary['ROI (%)'].fillna(0)
+
+    return metals_summary
+
+#############################################################################
+# FUNKCJE KOSZTÓW MAGAZYNOWANIA
+#############################################################################
+
+def calculate_storage_costs(
+    df_portfolio: pd.DataFrame, 
+    storage_fee_rate: float = 0.005, 
+    storage_base: str = "value", 
+    storage_frequency: str = "monthly", 
+    vat_rate: float = 19.0, 
+    cover_method: str = "cash"
+) -> pd.DataFrame:
+    """Oblicza koszty magazynowania i uwzględnia sposób ich pokrycia."""
+    if df_portfolio.empty:
+        return df_portfolio
+
+    df = df_portfolio.copy()
+
+    # Ustalenie podstawy naliczania kosztu
+    base_column = "Kwota operacji"
+
+    # Stawka miesięczna lub roczna
+    if storage_frequency == "monthly":
+        period_rate = storage_fee_rate / 12 / 100
+    else:
+        period_rate = storage_fee_rate / 100
+
+    vat_multiplier = 1 + vat_rate / 100
+
+    # Grupa po dacie
+    grouped = df.groupby('Data')
+    results = []
+
+    for date, group in grouped:
+        period_cost_net = group[base_column].sum() * period_rate
+        period_cost_gross = period_cost_net * vat_multiplier
+
+        group = group.copy()
+        group['Koszt_magazynowania'] = 0.0
+        group['Kwota_po_kosztach'] = group[base_column]
+
+        if cover_method == "cash":
+            # Koszt pokrywany gotówką – bez zmiany metali
+            group['Koszt_magazynowania'] = period_cost_gross / len(group)
+            group['Kwota_po_kosztach'] = group[base_column] - group['Koszt_magazynowania']
+
+        elif cover_method in ["gold", "silver", "platinum", "palladium"]:
             selected = group[group['Metal'] == cover_method.capitalize()]
             if not selected.empty:
                 metal_price = selected.iloc[0]['Cena jednostkowa']
@@ -1087,754 +1832,4 @@ def main():
 if __name__ == "__main__":
     main()
 """
-Prometalle - Zaawansowany Symulator Inwestycji w Metale Szlachetne
 
-Aplikacja Streamlit do analiz i symulacji inwestycji w złoto, srebro,
-platynę i pallad na podstawie historycznych danych LBMA.
-"""
-
-import streamlit as st
-import pandas as pd
-import numpy as np
-import plotly.graph_objects as go
-import plotly.express as px
-import matplotlib.pyplot as plt
-from datetime import datetime, timedelta
-from typing import Dict, List, Tuple, Optional, Union, Any
-import os
-import base64
-from io import BytesIO
-
-#############################################################################
-# KONFIGURACJA
-#############################################################################
-
-# Ustawienia domyślne
-DEFAULT_LANGUAGE = 'pl'      # Domyślny język: polski
-DEFAULT_CURRENCY = 'EUR'     # Domyślna waluta: Euro
-DEFAULT_UNIT = 'g'           # Domyślna jednostka: gramy
-
-# Dostępne opcje
-AVAILABLE_LANGUAGES = ['pl', 'en', 'de']
-AVAILABLE_CURRENCIES = ['PLN', 'EUR', 'USD']
-AVAILABLE_UNITS = ['g', 'oz']
-
-# Etykiety językowe
-LANGUAGE_LABELS = {
-    "pl": "Polski",
-    "en": "English",
-    "de": "Deutsch"
-}
-
-# Roczne inflacje domyślne (jeśli brak danych w CSV)
-DEFAULT_INFLATION = {
-    'PLN': 0.06,    # 6% rocznie
-    'EUR': 0.02,    # 2% rocznie
-    'USD': 0.025    # 2,5% rocznie
-}
-
-# Przeliczniki jednostek
-UNITS_CONVERSION = {
-    'g_to_oz': 0.03215,      # gramy na uncje
-    'oz_to_g': 31.1035       # uncje na gramy
-}
-
-# Kolory metali do wykresów
-METAL_COLORS = {
-    'Gold': '#FFD700',      # Złoto
-    'Silver': '#C0C0C0',    # Srebro
-    'Platinum': '#E5E4E2',  # Platyna
-    'Palladium': '#8A8B8C'  # Pallad
-}
-
-# Historyczne wydarzenia na wykresach
-HISTORICAL_EVENTS = {
-    '2008-09-15': 'Upadek Lehman Brothers',
-    '2011-08-22': 'Szczyt ceny złota',
-    '2020-03-23': 'Krach COVID-19',
-    '2022-02-24': 'Inwazja Rosji na Ukrainę'
-}
-
-#############################################################################
-# TŁUMACZENIA
-#############################################################################
-
-# Słownik tłumaczeń
-TRANSLATIONS = {
-    # Ogólne ustawienia
-    "choose_language": {
-        "pl": "Wybierz język",
-        "en": "Choose language",
-        "de": "Sprache wählen"
-    },
-    "choose_currency": {
-        "pl": "Wybierz walutę",
-        "en": "Choose currency",
-        "de": "Währung wählen"
-    },
-    "choose_unit": {
-        "pl": "Wybierz jednostkę wagi",
-        "en": "Choose weight unit",
-        "de": "Gewichtseinheit wählen"
-    },
-    
-    # Sekcje konfiguracji
-    "general_settings": {
-        "pl": "Ustawienia ogólne",
-        "en": "General settings",
-        "de": "Allgemeine Einstellungen"
-    },
-    "simulation_settings": {
-        "pl": "Ustawienia symulacji",
-        "en": "Simulation settings",
-        "de": "Simulationseinstellungen"
-    },
-    "allocation_settings": {
-        "pl": "Ustawienia alokacji kapitału",
-        "en": "Capital allocation settings",
-        "de": "Kapitalallokationseinstellungen"
-    },
-    
-    # Kwoty inwestycji
-    "start_amount": {
-        "pl": "Kwota początkowa inwestycji",
-        "en": "Initial investment amount",
-        "de": "Anfangsinvestition"
-    },
-    "recurring_amount": {
-        "pl": "Kwota zakupu systematycznego",
-        "en": "Recurring purchase amount",
-        "de": "Regelmäßiger Kaufbetrag"
-    },
-    
-    # Częstotliwości zakupów
-    "frequency": {
-        "pl": "Częstotliwość zakupów",
-        "en": "Purchase frequency",
-        "de": "Kaufhäufigkeit"
-    },
-    "purchase_day_weekly": {
-        "pl": "Dzień tygodnia zakupu (0=Poniedziałek, ..., 4=Piątek)",
-        "en": "Day of the week to purchase (0=Monday, ..., 4=Friday)",
-        "de": "Wochentag des Kaufs (0=Montag, ..., 4=Freitag)"
-    },
-    "purchase_day_monthly": {
-        "pl": "Dzień miesiąca zakupu (1-28)",
-        "en": "Day of the month to purchase (1-28)",
-        "de": "Kauftag des Monats (1-28)"
-    },
-    "purchase_day_quarterly": {
-        "pl": "Dzień kwartału zakupu (1-90)",
-        "en": "Day of the quarter to purchase (1-90)",
-        "de": "Kauftag des Quartals (1-90)"
-    },
-    
-    # Daty
-    "start_date": {
-        "pl": "Data rozpoczęcia inwestycji",
-        "en": "Investment start date",
-        "de": "Anfangsdatum der Investition"
-    },
-    "end_date": {
-        "pl": "Data zakończenia inwestycji",
-        "en": "Investment end date",
-        "de": "Enddatum der Investition"
-    },
-    
-    # Alokacja
-    "total_allocation": {
-        "pl": "Łączna alokacja",
-        "en": "Total allocation",
-        "de": "Gesamtallokation"
-    },
-    "allocation_error": {
-        "pl": "⚠️ Łączna alokacja musi wynosić 100%!",
-        "en": "⚠️ Total allocation must be 100%!",
-        "de": "⚠️ Die Gesamtallokation muss 100% betragen!"
-    },
-    
-    # Zakupy systematyczne
-    "recurring_purchase_settings": {
-        "pl": "Ustawienia zakupów systematycznych",
-        "en": "Recurring purchase settings",
-        "de": "Einstellungen für regelmäßige Käufe"
-    },
-    "one_time": {
-        "pl": "Jednorazowy",
-        "en": "One-time",
-        "de": "Einmalig"
-    },
-    "weekly": {
-        "pl": "Co tydzień",
-        "en": "Weekly",
-        "de": "Wöchentlich"
-    },
-    "monthly": {
-        "pl": "Co miesiąc",
-        "en": "Monthly",
-        "de": "Monatlich"
-    },
-    "quarterly": {
-        "pl": "Co kwartał",
-        "en": "Quarterly",
-        "de": "Vierteljährlich"
-    },
-    
-    # Koszty magazynowe
-    "storage_cost_settings": {
-        "pl": "Koszty magazynowe",
-        "en": "Storage cost settings",
-        "de": "Lagerkosteneinstellungen"
-    },
-    "storage_base": {
-        "pl": "Podstawa naliczania kosztu",
-        "en": "Storage cost base",
-        "de": "Berechnungsgrundlage Lagerkosten"
-    },
-    "storage_frequency": {
-        "pl": "Częstotliwość naliczania",
-        "en": "Storage frequency",
-        "de": "Häufigkeit der Lagerkosten"
-    },
-    "storage_rate": {
-        "pl": "Stawka magazynowania (%)",
-        "en": "Storage rate (%)",
-        "de": "Lagerkostensatz (%)"
-    },
-    "vat_rate": {
-        "pl": "Stawka VAT (%)",
-        "en": "VAT rate (%)",
-        "de": "Mehrwertsteuersatz (%)"
-    },
-    "cover_method": {
-        "pl": "Pokrycie kosztów magazynowych",
-        "en": "Storage cost coverage",
-        "de": "Deckung der Lagerkosten"
-    },
-    
-    # Sposoby pokrycia kosztów
-    "cash": {
-        "pl": "Gotówka",
-        "en": "Cash",
-        "de": "Bargeld"
-    },
-    "gold": {
-        "pl": "Złoto",
-        "en": "Gold",
-        "de": "Gold"
-    },
-    "silver": {
-        "pl": "Srebro",
-        "en": "Silver",
-        "de": "Silber"
-    },
-    "platinum": {
-        "pl": "Platyna",
-        "en": "Platinum",
-        "de": "Platin"
-    },
-    "palladium": {
-        "pl": "Pallad",
-        "en": "Palladium",
-        "de": "Palladium"
-    },
-    "all_metals": {
-        "pl": "Wszystkie metale",
-        "en": "All metals",
-        "de": "Alle Metalle"
-    },
-    
-    # Marże
-    "margin_settings": {
-        "pl": "Marże i koszty transakcyjne",
-        "en": "Margins and Transaction Costs",
-        "de": "Margen und Transaktionskosten"
-    },
-    "purchase_margin": {
-        "pl": "Marża przy zakupie (%)",
-        "en": "Purchase Margin (%)",
-        "de": "Kaufmarge (%)"
-    },
-    "sale_margin": {
-        "pl": "Marża przy sprzedaży (%)",
-        "en": "Sale Margin (%)",
-        "de": "Verkaufsmarge (%)"
-    },
-    
-    # Przyciski akcji
-    "start_simulation": {
-        "pl": "Rozpocznij symulację",
-        "en": "Start simulation",
-        "de": "Simulation starten"
-    },
-    "reset_simulation": {
-        "pl": "Resetuj symulację",
-        "en": "Reset simulation",
-        "de": "Simulation zurücksetzen"
-    },
-    "export_data": {
-        "pl": "Eksportuj dane",
-        "en": "Export data",
-        "de": "Daten exportieren"
-    },
-    
-    # Wyniki symulacji
-    "transaction_register": {
-        "pl": "Rejestr operacji",
-        "en": "Transaction Register",
-        "de": "Transaktionsregister"
-    },
-    "portfolio_summary": {
-        "pl": "Podsumowanie portfela",
-        "en": "Portfolio summary",
-        "de": "Portfoliozusammenfassung"
-    },
-    "storage_costs": {
-        "pl": "Łączne koszty magazynowania",
-        "en": "Total storage costs",
-        "de": "Gesamte Lagerkosten"
-    },
-    "portfolio_chart": {
-        "pl": "Wykres wartości portfela",
-        "en": "Portfolio value chart",
-        "de": "Wertdiagramm des Portfolios"
-    },
-    "purchase_schedule": {
-        "pl": "Harmonogram zakupów",
-        "en": "Purchase schedule",
-        "de": "Kaufplan"
-    },
-    
-    # Metryki portfela
-    "portfolio_value": {
-        "pl": "Wartość portfela",
-        "en": "Portfolio value",
-        "de": "Portfoliowert"
-    },
-    "invested_amount": {
-        "pl": "Zainwestowana kwota",
-        "en": "Invested amount",
-        "de": "Investierter Betrag"
-    },
-    "return_on_investment": {
-        "pl": "Stopa zwrotu",
-        "en": "Return on investment",
-        "de": "Anlagerendite"
-    },
-    
-    # Komunikaty o błędach
-    "error_loading_data": {
-        "pl": "Błąd ładowania danych",
-        "en": "Error loading data",
-        "de": "Fehler beim Laden der Daten"
-    },
-    "no_data_to_display": {
-        "pl": "Brak danych do wyświetlenia",
-        "en": "No data to display",
-        "de": "Keine Daten zum Anzeigen"
-    },
-    
-    # Zakładki wyników
-    "visualizations_tab": {
-        "pl": "Wizualizacje",
-        "en": "Visualizations",
-        "de": "Visualisierungen"
-    },
-    "transaction_register_tab": {
-        "pl": "Rejestr operacji",
-        "en": "Transaction Register",
-        "de": "Transaktionsregister"
-    },
-    "portfolio_summary_tab": {
-        "pl": "Podsumowanie portfela",
-        "en": "Portfolio Summary",
-        "de": "Portfolioübersicht"
-    },
-    "purchase_schedule_tab": {
-        "pl": "Harmonogram zakupów",
-        "en": "Purchase Schedule",
-        "de": "Kaufplan"
-    },
-    
-    # Strona startowa
-    "welcome_message": {
-        "pl": "Witaj w Prometalle",
-        "en": "Welcome to Prometalle",
-        "de": "Willkommen bei Prometalle"
-    },
-    "app_description": {
-        "pl": "Inteligentny symulator inwestycji w metale szlachetne",
-        "en": "Intelligent precious metals investment simulator",
-        "de": "Intelligenter Simulator für Investitionen in Edelmetalle"
-    },
-    
-    # Stopka
-    "footer_disclaimer": {
-        "pl": "Prometalle - Symulator inwestycji w metale szlachetne. Symulacja nie stanowi porady inwestycyjnej.",
-        "en": "Prometalle - Precious metals investment simulator. Simulation does not constitute investment advice.",
-        "de": "Prometalle - Simulator für Investitionen in Edelmetalle. Die Simulation stellt keine Anlageberatung dar."
-    }
-}
-
-def translate(key: str, language: str = DEFAULT_LANGUAGE) -> str:
-    """Zwraca tłumaczenie danego klucza w wybranym języku."""
-    if key in TRANSLATIONS:
-        if language in TRANSLATIONS[key]:
-            return TRANSLATIONS[key][language]
-        elif 'en' in TRANSLATIONS[key]:
-            return TRANSLATIONS[key]['en']
-    return key
-
-#############################################################################
-# FUNKCJE POMOCNICZE
-#############################################################################
-
-def load_css():
-    """Ładuje niestandardowy CSS."""
-    st.markdown("""
-    <style>
-    .main {
-        background-color: #f5f5f5;
-    }
-    .stApp {
-        max-width: 1200px;
-        margin: 0 auto;
-    }
-    h1, h2, h3 {
-        color: #1E3A8A;
-    }
-    .sidebar .sidebar-content {
-        background-color: #f0f9ff;
-    }
-    .st-bw {
-        background-color: #ffffff;
-        border-radius: 5px;
-        padding: 1rem;
-        box-shadow: 0 1px 2px rgba(0,0,0,0.1);
-    }
-    .info-box {
-        background-color: #e0f7fa;
-        border-left: 5px solid #0097a7;
-        padding: 1rem;
-        margin: 1rem 0;
-        border-radius: 0 5px 5px 0;
-    }
-    .warning-box {
-        background-color: #fff8e1;
-        border-left: 5px solid #ffa000;
-        padding: 1rem;
-        margin: 1rem 0;
-        border-radius: 0 5px 5px 0;
-    }
-    .metric-card {
-        background-color: white;
-        border-radius: 5px;
-        padding: 1rem;
-        margin: 0.5rem 0;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.12);
-        text-align: center;
-    }
-    .metric-value {
-        font-size: 1.8rem;
-        font-weight: bold;
-        color: #1E3A8A;
-    }
-    .metric-label {
-        font-size: 0.9rem;
-        color: #64748b;
-    }
-    .chart-container {
-        background-color: white;
-        border-radius: 5px;
-        padding: 1rem;
-        margin: 1rem 0;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.12);
-    }
-    .gold-color { color: #FFD700; }
-    .silver-color { color: #C0C0C0; }
-    .platinum-color { color: #E5E4E2; }
-    .palladium-color { color: #8A8B8C; }
-    </style>
-    """, unsafe_allow_html=True)
-
-def convert_df_to_csv_download_link(df, filename="data.csv"):
-    """Generuje link do pobrania DataFrame jako CSV."""
-    csv = df.to_csv(index=False)
-    b64 = base64.b64encode(csv.encode()).decode()
-    href = f'<a href="data:file/csv;base64,{b64}" download="{filename}">Pobierz plik CSV</a>'
-    return href
-
-def create_excel_download_link(data_dict, filename="data.xlsx"):
-    """Generuje link do pobrania słownika DataFrame jako Excel."""
-    output = BytesIO()
-    with pd.ExcelWriter(output, engine='openpyxl') as writer:
-        for sheet_name, df in data_dict.items():
-            df.to_excel(writer, sheet_name=sheet_name, index=False)
-    excel_data = output.getvalue()
-    b64 = base64.b64encode(excel_data).decode()
-    href = f'<a href="data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,{b64}" download="{filename}">Pobierz plik Excel</a>'
-    return href
-
-@st.cache_data
-def load_metal_prices(file_path: str) -> pd.DataFrame:
-    """Ładuje ceny metali z pliku CSV."""
-    try:
-        prices = pd.read_csv(file_path, parse_dates=["Data"])
-        prices.sort_values("Data", inplace=True)
-        return prices
-    except Exception as e:
-        st.error(f"Błąd podczas ładowania cen metali: {e}")
-        return pd.DataFrame()
-
-@st.cache_data
-def load_exchange_rates(file_path: str) -> pd.DataFrame:
-    """Ładuje kursy walutowe z pliku CSV."""
-    try:
-        rates = pd.read_csv(file_path, parse_dates=["Data"])
-        rates.sort_values("Data", inplace=True)
-        return rates
-    except Exception as e:
-        st.error(f"Błąd podczas ładowania kursów walut: {e}")
-        return pd.DataFrame()
-
-@st.cache_data
-def load_inflation_rates(file_path: str) -> pd.DataFrame:
-    """Ładuje dane o inflacji z pliku CSV."""
-    try:
-        df = pd.read_csv(file_path)
-        if {'Rok', 'waluta', 'roczna_inflacja'}.issubset(df.columns):
-            return df
-        else:
-            raise ValueError("Brak wymaganych kolumn w pliku CSV.")
-    except Exception as e:
-        # Zwróć domyślne inflacje w prostym DataFrame
-        data = []
-        for year in range(1997, 2030):
-            for currency, rate in DEFAULT_INFLATION.items():
-                data.append({'Rok': year, 'waluta': currency, 'roczna_inflacja': rate})
-        return pd.DataFrame(data)
-
-def get_inflation_rate(df_inflation: pd.DataFrame, year: int, currency: str) -> float:
-    """Zwraca roczną inflację dla podanego roku i waluty."""
-    try:
-        rate = df_inflation[(df_inflation['Rok'] == year) & (df_inflation['waluta'] == currency)]['roczna_inflacja'].values
-        if len(rate) > 0:
-            return float(rate[0])
-        else:
-            return DEFAULT_INFLATION.get(currency, 0.02)
-    except:
-        return DEFAULT_INFLATION.get(currency, 0.02)
-
-#############################################################################
-# FUNKCJE OBSŁUGI METALI I KURSÓW WALUT
-#############################################################################
-
-def convert_prices_to_currency(prices_df: pd.DataFrame, rates_df: pd.DataFrame, currency: str) -> pd.DataFrame:
-    """Konwertuje ceny metali na wybraną walutę (EUR, USD, PLN)."""
-    if prices_df.empty or rates_df.empty:
-        return pd.DataFrame()
-        
-    merged = pd.merge(prices_df, rates_df, on="Data", how="left")
-
-    if currency == "EUR":
-        return merged
-    elif currency == "USD":
-        merged["Gold"] = merged["Gold"] * merged["EUR_USD"]
-        merged["Silver"] = merged["Silver"] * merged["EUR_USD"]
-        merged["Platinum"] = merged["Platinum"] * merged["EUR_USD"]
-        merged["Palladium"] = merged["Palladium"] * merged["EUR_USD"]
-    elif currency == "PLN":
-        merged["Gold"] = merged["Gold"] * merged["EUR_PLN"]
-        merged["Silver"] = merged["Silver"] * merged["EUR_PLN"]
-        merged["Platinum"] = merged["Platinum"] * merged["EUR_PLN"]
-        merged["Palladium"] = merged["Palladium"] * merged["EUR_PLN"]
-    else:
-        raise ValueError(f"Unsupported currency: {currency}")
-
-    return merged
-
-#############################################################################
-# FUNKCJE HARMONOGRAMU ZAKUPÓW
-#############################################################################
-
-def generate_purchase_schedule(
-    start_date: str,
-    end_date: str,
-    frequency: str,
-    purchase_day: int,
-    purchase_amount: float
-) -> pd.DataFrame:
-    """Generuje harmonogram zakupów na podstawie częstotliwości."""
-    schedule = []
-    
-    start = pd.to_datetime(start_date)
-    end = pd.to_datetime(end_date)
-    
-    if frequency == 'weekly':
-        # Co tydzień w określony dzień tygodnia
-        current = start
-        while current <= end:
-            if current.weekday() == purchase_day:
-                schedule.append({'Data': current, 'Kwota': purchase_amount})
-            current += timedelta(days=1)
-
-    elif frequency == 'monthly':
-        # Co miesiąc w określony dzień
-        current = start.replace(day=1)
-        while current <= end:
-            try:
-                purchase_date = current.replace(day=purchase_day)
-            except ValueError:
-                # Dzień nie istnieje (np. 30 lutego) -> ostatni dzień miesiąca
-                next_month = current + pd.DateOffset(months=1)
-                purchase_date = next_month - pd.DateOffset(days=1)
-            if purchase_date >= start and purchase_date <= end:
-                schedule.append({'Data': purchase_date, 'Kwota': purchase_amount})
-            current += pd.DateOffset(months=1)
-
-    elif frequency == 'quarterly':
-        # Co kwartał w określony dzień
-        current = start.replace(day=1)
-        while current <= end:
-            try:
-                purchase_date = current.replace(day=purchase_day)
-            except ValueError:
-                next_month = current + pd.DateOffset(months=1)
-                purchase_date = next_month - pd.DateOffset(days=1)
-            if purchase_date >= start and purchase_date <= end:
-                schedule.append({'Data': purchase_date, 'Kwota': purchase_amount})
-            current += pd.DateOffset(months=3)
-
-    return pd.DataFrame(schedule)
-
-#############################################################################
-# FUNKCJE OBSŁUGI PORTFELA
-#############################################################################
-
-def build_portfolio(
-    schedule: pd.DataFrame,
-    metal_prices: pd.DataFrame,
-    allocation: dict,
-    purchase_margin: float = 2.0
-) -> pd.DataFrame:
-    """Buduje rejestr operacji zakupowych na podstawie harmonogramu i alokacji."""
-    portfolio_records = []
-
-    if schedule.empty or metal_prices.empty:
-        return pd.DataFrame()
-
-    for _, row in schedule.iterrows():
-        date = pd.to_datetime(row['Data'])
-        amount = row['Kwota']
-
-        # Szukamy ceny na daną datę
-        daily_prices = metal_prices[metal_prices['Data'] == date]
-
-        if daily_prices.empty:
-            # Jeśli brak cen w dniu zakupu, bierzemy pierwszy następny dostępny dzień
-            daily_prices = metal_prices[metal_prices['Data'] > date].head(1)
-            if daily_prices.empty:
-                # Jeśli nadal brak cen, pomijamy ten zakup
-                continue
-
-        for metal, alloc_percent in allocation.items():
-            if alloc_percent > 0:
-                alloc_amount = amount * (alloc_percent / 100)
-                metal_price_col = metal.capitalize()
-                
-                if metal_price_col in daily_prices.columns:
-                    metal_price = daily_prices[metal_price_col].values[0]
-                    price_with_margin = metal_price * (1 + purchase_margin / 100)
-                    quantity = alloc_amount / price_with_margin
-
-                    portfolio_records.append({
-                        'Data': date,
-                        'Typ operacji': 'Zakup',
-                        'Metal': metal.capitalize(),
-                        'Ilość': quantity,
-                        'Cena jednostkowa': price_with_margin,
-                        'Kwota operacji': alloc_amount,
-                        'Koszt_magazynowania': 0.0,
-                        'Kwota_po_kosztach': alloc_amount
-                    })
-
-    portfolio_df = pd.DataFrame(portfolio_records)
-    return portfolio_df
-
-def aggregate_portfolio(df_portfolio: pd.DataFrame) -> pd.DataFrame:
-    """Agreguje wartości końcowe portfela."""
-    if df_portfolio.empty:
-        return pd.DataFrame()
-
-    current_portfolio = df_portfolio.copy()
-    metals_summary = current_portfolio.groupby('Metal').agg({
-        'Ilość': 'sum',
-        'Kwota operacji': 'sum',
-        'Cena jednostkowa': 'last'  # Ostatnia cena
-    }).reset_index()
-    
-    # Dodajemy kolumnę z aktualną wartością
-    metals_summary['Wartość aktualna'] = metals_summary['Ilość'] * metals_summary['Cena jednostkowa']
-    
-    # Obliczamy zysk/stratę
-    metals_summary['Zysk/Strata'] = metals_summary['Wartość aktualna'] - metals_summary['Kwota operacji']
-    
-    # Obliczamy ROI
-    metals_summary['ROI (%)'] = (metals_summary['Zysk/Strata'] / metals_summary['Kwota operacji'] * 100)
-    metals_summary['ROI (%)'] = metals_summary['ROI (%)'].replace([np.inf, -np.inf], 0)
-    metals_summary['ROI (%)'] = metals_summary['ROI (%)'].fillna(0)
-
-    return metals_summary
-
-#############################################################################
-# FUNKCJE KOSZTÓW MAGAZYNOWANIA
-#############################################################################
-
-def calculate_storage_costs(
-    df_portfolio: pd.DataFrame, 
-    storage_fee_rate: float = 0.005, 
-    storage_base: str = "value", 
-    storage_frequency: str = "monthly", 
-    vat_rate: float = 19.0, 
-    cover_method: str = "cash"
-) -> pd.DataFrame:
-    """Oblicza koszty magazynowania i uwzględnia sposób ich pokrycia."""
-    if df_portfolio.empty:
-        return df_portfolio
-
-    df = df_portfolio.copy()
-
-    # Ustalenie podstawy naliczania kosztu
-    base_column = "Kwota operacji"
-
-    # Stawka miesięczna lub roczna
-    if storage_frequency == "monthly":
-        period_rate = storage_fee_rate / 12 / 100
-    else:
-        period_rate = storage_fee_rate / 100
-
-    vat_multiplier = 1 + vat_rate / 100
-
-    # Grupa po dacie
-    grouped = df.groupby('Data')
-    results = []
-
-    for date, group in grouped:
-        period_cost_net = group[base_column].sum() * period_rate
-        period_cost_gross = period_cost_net * vat_multiplier
-
-        group = group.copy()
-        group['Koszt_magazynowania'] = 0.0
-        group['Kwota_po_kosztach'] = group[base_column]
-
-        if cover_method == "cash":
-            # Koszt pokrywany gotówką – bez zmiany metali
-            group['Koszt_magazynowania'] = period_cost_gross / len(group)
-            group['Kwota_po_kosztach'] = group[base_column] - group['Koszt_magazynowania']
-
-        elif cover_method in ["gold", "silver", "platinum", "palladium"]:
-            selected = group[group['Metal'] == cover_method.capitalize()]
-            if not selected.empty:
-                metal_price = selected.iloc[0]['Cena jednostkowa']
-                grams_to_sell = period_cost_gross / metal_price
-                group.loc[group['Metal
