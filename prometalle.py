@@ -1186,12 +1186,12 @@ def main():
 
     # Panel boczny
     with st.sidebar:
-    st.header(translate("simulation_settings", language=st.session_state.language))
+        st.header(translate("simulation_settings", language=st.session_state.language))
 
-    selected_section = st.radio(
-        "⚙️ Wybierz sekcję ustawień:",
-        options=["Ustawienia ogólne", "Alokacja kapitału", "Zakupy systematyczne", "Koszty magazynowe"]
-    )
+        selected_section = st.radio(
+            "⚙️ Wybierz sekcję ustawień:",
+            options=["Ustawienia ogólne", "Alokacja kapitału", "Zakupy systematyczne", "Koszty magazynowe"]
+        )
 
     if selected_section == "Ustawienia ogólne":
         selected_language_label = st.selectbox(
