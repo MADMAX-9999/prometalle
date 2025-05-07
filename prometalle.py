@@ -1,9 +1,8 @@
+"""
 Prometalle - Zaawansowany Symulator Inwestycji w Metale Szlachetne
-
 Aplikacja Streamlit do analiz i symulacji inwestycji w złoto, srebro,
 platynę i pallad na podstawie historycznych danych LBMA.
 """
-
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -396,22 +395,9 @@ def translate(key: str, language: str = DEFAULT_LANGUAGE) -> str:
             return TRANSLATIONS[key]['en']
     return key
 
-
 #############################################################################
 # FUNKCJE POMOCNICZE
 #############################################################################
-
-import streamlit as st
-import pandas as pd
-import base64
-from io import BytesIO
-
-# Domyślne inflacje
-DEFAULT_INFLATION = {
-    'PLN': 0.06,
-    'EUR': 0.02,
-    'USD': 0.025
-}
 
 def load_css():
     """Ładuje niestandardowy CSS."""
@@ -421,7 +407,7 @@ def load_css():
         background-color: #f5f5f5;
     }
     .stApp {
-  #      max-width: 1200px;
+        max-width: 1200px;
         margin: 0 auto;
     }
     h1, h2, h3 {
@@ -432,7 +418,7 @@ def load_css():
     }
     .st-bw {
         background-color: #ffffff;
-    #    border-radius: 5px;
+        border-radius: 5px;
         padding: 1rem;
         box-shadow: 0 1px 2px rgba(0,0,0,0.1);
     }
@@ -548,8 +534,6 @@ def get_inflation_rate(df_inflation: pd.DataFrame, year: int, currency: str) -> 
             return DEFAULT_INFLATION.get(currency, 0.02)
     except:
         return DEFAULT_INFLATION.get(currency, 0.02)
-
-
 
 #############################################################################
 # FUNKCJE OBSŁUGI METALI I KURSÓW WALUT
@@ -986,63 +970,6 @@ def plot_price_history(
     # Wyświetlamy wykres
     st.plotly_chart(fig, use_container_width=True)
 
-def plot_cumulative_investment(schedule_df: pd.DataFrame, currency: str = 'EUR') -> None:
-    """Tworzy wykres skumulowanej inwestycji w czasie."""
-    if schedule_df.empty:
-        st.warning("Brak danych do wyświetlenia wykresu inwestycji.")
-        return
-    
-    # Sortujemy po dacie
-    schedule_df = schedule_df.sort_values('Data')
-    
-    # Obliczamy skumulowaną sumę
-    schedule_df['Skumulowana kwota'] = schedule_df['Kwota'].cumsum()
-    
-    # Tworzymy wykres
-    fig = go.Figure()
-    
-    # Dodajemy linie
-    fig.add_trace(go.Scatter(
-        x=schedule_df['Data'],
-        y=schedule_df['Skumulowana kwota'],
-        mode='lines',
-        name='Skumulowana inwestycja',
-        line=dict(color='#0891b2', width=3),
-        fill='tozeroy',
-        fillcolor='rgba(8, 145, 178, 0.2)',
-        hovertemplate='%{x|%d.%m.%Y}<br>Zainwestowano: %{y:,.2f} ' + currency
-    ))
-    
-    # Dodajemy słupki pojedynczych inwestycji
-    fig.add_trace(go.Bar(
-        x=schedule_df['Data'],
-        y=schedule_df['Kwota'],
-        name='Pojedyncze wpłaty',
-        marker_color='#0e7490',
-        hovertemplate='%{x|%d.%m.%Y}<br>Wpłata: %{y:,.2f} ' + currency
-    ))
-    
-    # Konfigurujemy układ wykresu
-    fig.update_layout(
-        xaxis_title="Data",
-        yaxis_title=f"Kwota ({currency})",
-        hovermode="x unified",
-        legend=dict(
-            orientation="h",
-            yanchor="bottom",
-            y=1.02,
-            xanchor="right",
-            x=1
-        ),
-        margin=dict(l=10, r=10, t=10, b=10),
-        height=350,
-        barmode='overlay',
-        template='plotly_white'
-    )
-    
-    # Wyświetlamy wykres
-    st.plotly_chart(fig, use_container_width=True)
-
 def plot_comparison_chart(
     metal_prices: pd.DataFrame, 
     start_date: datetime, 
@@ -1125,6 +1052,63 @@ def plot_comparison_chart(
         ),
         margin=dict(l=10, r=10, t=10, b=10),
         height=400,
+        template='plotly_white'
+    )
+    
+    # Wyświetlamy wykres
+    st.plotly_chart(fig, use_container_width=True)
+
+def plot_cumulative_investment(schedule_df: pd.DataFrame, currency: str = 'EUR') -> None:
+    """Tworzy wykres skumulowanej inwestycji w czasie."""
+    if schedule_df.empty:
+        st.warning("Brak danych do wyświetlenia wykresu inwestycji.")
+        return
+    
+    # Sortujemy po dacie
+    schedule_df = schedule_df.sort_values('Data')
+    
+    # Obliczamy skumulowaną sumę
+    schedule_df['Skumulowana kwota'] = schedule_df['Kwota'].cumsum()
+    
+    # Tworzymy wykres
+    fig = go.Figure()
+    
+    # Dodajemy linie
+    fig.add_trace(go.Scatter(
+        x=schedule_df['Data'],
+        y=schedule_df['Skumulowana kwota'],
+        mode='lines',
+        name='Skumulowana inwestycja',
+        line=dict(color='#0891b2', width=3),
+        fill='tozeroy',
+        fillcolor='rgba(8, 145, 178, 0.2)',
+        hovertemplate='%{x|%d.%m.%Y}<br>Zainwestowano: %{y:,.2f} ' + currency
+    ))
+    
+    # Dodajemy słupki pojedynczych inwestycji
+    fig.add_trace(go.Bar(
+        x=schedule_df['Data'],
+        y=schedule_df['Kwota'],
+        name='Pojedyncze wpłaty',
+        marker_color='#0e7490',
+        hovertemplate='%{x|%d.%m.%Y}<br>Wpłata: %{y:,.2f} ' + currency
+    ))
+    
+    # Konfigurujemy układ wykresu
+    fig.update_layout(
+        xaxis_title="Data",
+        yaxis_title=f"Kwota ({currency})",
+        hovermode="x unified",
+        legend=dict(
+            orientation="h",
+            yanchor="bottom",
+            y=1.02,
+            xanchor="right",
+            x=1
+        ),
+        margin=dict(l=10, r=10, t=10, b=10),
+        height=350,
+        barmode='overlay',
         template='plotly_white'
     )
     
@@ -1846,5 +1830,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-"""
-
