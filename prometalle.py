@@ -1,4 +1,4 @@
-    """
+"""
 Prometalle - Zaawansowany Symulator Inwestycji w Metale Szlachetne
 Aplikacja Streamlit do analiz i symulacji inwestycji w złoto, srebro,
 platynę i pallad na podstawie historycznych danych LBMA.
