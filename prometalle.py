@@ -432,7 +432,7 @@ def load_css():
     }
     .st-bw {
         background-color: #ffffff;
-        border-radius: 5px;
+    #    border-radius: 5px;
         padding: 1rem;
         box-shadow: 0 1px 2px rgba(0,0,0,0.1);
     }
